@@ -6,6 +6,8 @@ struct PodcastRowView: View {
     @EnvironmentObject var downloadManager: DownloadManager
     @EnvironmentObject var audioPlayer: AudioPlayer
 
+    @State private var hasNotes = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -21,6 +23,12 @@ struct PodcastRowView: View {
                 Text(podcast.duration)
                     .font(.caption)
                     .foregroundColor(.secondary)
+
+                if hasNotes {
+                    Image(systemName: "note.text")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
 
                 Spacer()
 
@@ -41,6 +49,9 @@ struct PodcastRowView: View {
                 .lineLimit(2)
         }
         .padding(.vertical, 8)
+        .onAppear {
+            hasNotes = ListeningHistoryService.shared.hasNotes(for: podcast)
+        }
     }
 
     @ViewBuilder

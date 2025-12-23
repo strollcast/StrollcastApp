@@ -143,8 +143,9 @@ class AudioPlayer: ObservableObject {
 
     private func logListeningHistory() {
         guard let podcast = currentPodcast else { return }
+        let position = currentTime
         Task.detached {
-            ListeningHistoryService.shared.logPlayback(podcast: podcast, position: self.currentTime)
+            ListeningHistoryService.shared.logPlayback(podcast: podcast, position: position)
         }
     }
 

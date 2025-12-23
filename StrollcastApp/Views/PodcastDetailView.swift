@@ -7,6 +7,8 @@ struct PodcastDetailView: View {
     @EnvironmentObject var audioPlayer: AudioPlayer
 
     @State private var showPlayer = false
+    @State private var notes: String = ""
+    @State private var showNotes = false
 
     var body: some View {
         ScrollView {
@@ -47,6 +49,10 @@ struct PodcastDetailView: View {
                 Divider()
 
                 playSection
+
+                Divider()
+
+                notesSection
             }
             .padding()
         }
@@ -54,6 +60,10 @@ struct PodcastDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPlayer) {
             PlayerView(podcast: podcast)
+        }
+        .onAppear {
+            notes = ListeningHistoryService.shared.readNotes(for: podcast)
+            showNotes = !notes.isEmpty
         }
     }
 
@@ -169,6 +179,43 @@ struct PodcastDetailView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button {
+                withAnimation {
+                    showNotes.toggle()
+                }
+            } label: {
+                HStack {
+                    Text("Notes")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    if !notes.isEmpty {
+                        Image(systemName: "note.text")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                    Spacer()
+                    Image(systemName: showNotes ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            if showNotes {
+                TextEditor(text: $notes)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(minHeight: 200)
+                    .padding(8)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .onChange(of: notes) { _, newValue in
+                        ListeningHistoryService.shared.saveNotes(newValue, for: podcast)
+                    }
             }
         }
     }
