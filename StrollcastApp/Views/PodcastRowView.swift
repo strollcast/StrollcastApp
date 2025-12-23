@@ -11,7 +11,7 @@ struct PodcastRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("\(podcast.year)")
+                Text(String(podcast.year))
                     .font(.caption)
                     .fontWeight(.semibold)
                     .padding(.horizontal, 8)

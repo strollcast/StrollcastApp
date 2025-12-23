@@ -115,7 +115,7 @@ struct NoteDetailView: View {
                     Text("•")
                         .foregroundColor(.secondary)
 
-                    Text("\(podcast.year)")
+                    Text(String(podcast.year))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

@@ -15,7 +15,7 @@ struct PodcastDetailView: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("\(podcast.year)")
+                        Text(String(podcast.year))
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .padding(.horizontal, 10)

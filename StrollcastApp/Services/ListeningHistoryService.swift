@@ -51,10 +51,25 @@ class ListeningHistoryService {
     func logPlayback(podcast: Podcast, position: TimeInterval) {
         let url = fileURL(for: podcast)
 
-        // Only create the file if it doesn't exist - don't update existing files
         if !fileManager.fileExists(atPath: url.path) {
-            createNewFile(at: url, podcast: podcast)
+            createNewFile(at: url, podcast: podcast, position: position)
+        } else {
+            appendPlaybackEntry(at: url, position: position)
         }
+    }
+
+    private func appendPlaybackEntry(at url: URL, position: TimeInterval) {
+        guard var content = try? String(contentsOf: url, encoding: .utf8) else { return }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEE MMM d yyyy 'at' ha"
+        let dateString = dateFormatter.string(from: Date())
+        let formattedPosition = formatTime(position)
+
+        let newEntry = "\n\(dateString) playing from \(formattedPosition)"
+        content += newEntry
+
+        try? content.write(to: url, atomically: true, encoding: .utf8)
     }
 
     func readNotes(for podcast: Podcast) -> String {
@@ -75,7 +90,12 @@ class ListeningHistoryService {
         return fileManager.fileExists(atPath: url.path)
     }
 
-    private func createNewFile(at url: URL, podcast: Podcast) {
+    private func createNewFile(at url: URL, podcast: Podcast, position: TimeInterval) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEE MMM d yyyy 'at' ha"
+        let dateString = dateFormatter.string(from: Date())
+        let formattedPosition = formatTime(position)
+
         let content = """
         ---
         id: \(podcast.id)
@@ -87,7 +107,9 @@ class ListeningHistoryService {
         paperUrl: \(podcast.paperUrl ?? "")
         ---
 
-        # \(podcast.title)
+        # Listening History
+
+        Started on \(dateString), playback time \(formattedPosition)
 
         ## Notes
 
@@ -95,5 +117,17 @@ class ListeningHistoryService {
         """
 
         try? content.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        guard time.isFinite && !time.isNaN else { return "0:00" }
+        let hours = Int(time) / 3600
+        let minutes = (Int(time) % 3600) / 60
+        let seconds = Int(time) % 60
+
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        }
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
