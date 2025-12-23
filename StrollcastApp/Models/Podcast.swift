@@ -8,6 +8,7 @@ struct Podcast: Identifiable, Codable, Equatable {
     let duration: String
     let description: String
     let audioPath: String
+    let paperUrl: String?
 
     var audioURL: URL {
         URL(string: "https://strollcast.com\(audioPath)")!
@@ -16,6 +17,17 @@ struct Podcast: Identifiable, Codable, Equatable {
     var fileName: String {
         audioPath.components(separatedBy: "/").last ?? "\(id).m4a"
     }
+
+    var paperURL: URL? {
+        guard let paperUrl = paperUrl else { return nil }
+        return URL(string: paperUrl)
+    }
+}
+
+struct EpisodesResponse: Codable {
+    let version: String
+    let updated: String
+    let episodes: [Podcast]
 }
 
 extension Podcast {
@@ -27,7 +39,8 @@ extension Podcast {
             year: 2022,
             duration: "29 min",
             description: "Google's orchestration layer for accelerators using asynchronous dataflow, enabling flexible parallelism across thousands of TPUs.",
-            audioPath: "/barham-2022-pathways/barham-2022-pathways.m4a"
+            audioPath: "/barham-2022-pathways/barham-2022-pathways.m4a",
+            paperUrl: "https://arxiv.org/abs/2203.12533"
         ),
         Podcast(
             id: "megatron-2021",
@@ -36,7 +49,8 @@ extension Podcast {
             year: 2021,
             duration: "34 min",
             description: "NVIDIA's techniques for training trillion-parameter models across thousands of GPUs using tensor, pipeline, and data parallelism.",
-            audioPath: "/narayanan-2021-megatron-lm/narayanan-2021-megatron-lm.m4a"
+            audioPath: "/narayanan-2021-megatron-lm/narayanan-2021-megatron-lm.m4a",
+            paperUrl: "https://arxiv.org/abs/2104.04473"
         ),
         Podcast(
             id: "fsdp-2023",
@@ -45,7 +59,8 @@ extension Podcast {
             year: 2023,
             duration: "24 min",
             description: "Meta's production experiences building fully sharded data parallel training into PyTorch.",
-            audioPath: "/zhao-2023-pytorch-fsdp/zhao-2023-pytorch-fsdp.m4a"
+            audioPath: "/zhao-2023-pytorch-fsdp/zhao-2023-pytorch-fsdp.m4a",
+            paperUrl: "https://arxiv.org/abs/2304.11277"
         ),
         Podcast(
             id: "zero-2020",
@@ -54,7 +69,8 @@ extension Podcast {
             year: 2020,
             duration: "17 min",
             description: "Microsoft's breakthrough technique for eliminating memory redundancy in distributed training.",
-            audioPath: "/rajbhandari-2020-zero/rajbhandari-2020-zero.m4a"
+            audioPath: "/rajbhandari-2020-zero/rajbhandari-2020-zero.m4a",
+            paperUrl: "https://arxiv.org/abs/1910.02054"
         )
     ]
 }
