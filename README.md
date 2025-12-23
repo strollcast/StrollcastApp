@@ -23,8 +23,8 @@ An iOS podcast app for browsing and playing episodes from [strollcast.com](https
 **Steps:**
 1. Clone the repository:
    ```bash
-   git clone git@github.com:strollcast/ScrollcastApp.git
-   cd ScrollcastApp
+   git clone git@github.com:strollcast/StrollcastApp.git
+   cd StrollcastApp
    ```
 
 2. Open in Xcode:
@@ -44,7 +44,7 @@ An iOS podcast app for browsing and playing episodes from [strollcast.com](https
 
 ### Option 2: Sideload IPA (No Mac Required)
 
-Download the latest unsigned IPA from [Releases](https://github.com/strollcast/ScrollcastApp/releases) and install using one of these tools:
+Download the latest unsigned IPA from [Releases](https://github.com/strollcast/StrollcastApp/releases) and install using one of these tools:
 
 | Tool | Platform | Notes |
 |------|----------|-------|
