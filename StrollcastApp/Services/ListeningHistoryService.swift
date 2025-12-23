@@ -1,5 +1,9 @@
 import Foundation
 
+extension Notification.Name {
+    static let listeningHistoryUpdated = Notification.Name("listeningHistoryUpdated")
+}
+
 class ListeningHistoryService {
     static let shared = ListeningHistoryService()
 
@@ -70,6 +74,37 @@ class ListeningHistoryService {
         content += newEntry
 
         try? content.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    func logPause(podcast: Podcast, position: TimeInterval) {
+        let url = fileURL(for: podcast)
+        guard fileManager.fileExists(atPath: url.path),
+              var content = try? String(contentsOf: url, encoding: .utf8) else { return }
+
+        let formattedPosition = formatTime(position)
+        let newEntry = "\nPaused at \(formattedPosition)"
+        content += newEntry
+
+        try? content.write(to: url, atomically: true, encoding: .utf8)
+
+        // Save position for resume
+        saveLastPosition(position, for: podcast)
+
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .listeningHistoryUpdated, object: podcast.id)
+        }
+    }
+
+    func saveLastPosition(_ position: TimeInterval, for podcast: Podcast) {
+        UserDefaults.standard.set(position, forKey: "playback_position_\(podcast.id)")
+    }
+
+    func getLastPosition(for podcast: Podcast) -> TimeInterval {
+        UserDefaults.standard.double(forKey: "playback_position_\(podcast.id)")
+    }
+
+    func clearLastPosition(for podcast: Podcast) {
+        UserDefaults.standard.removeObject(forKey: "playback_position_\(podcast.id)")
     }
 
     func readNotes(for podcast: Podcast) -> String {

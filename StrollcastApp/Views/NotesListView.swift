@@ -137,6 +137,11 @@ struct NoteDetailView: View {
         .onAppear {
             notes = ListeningHistoryService.shared.readNotes(for: podcast)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .listeningHistoryUpdated)) { notification in
+            if let podcastId = notification.object as? String, podcastId == podcast.id {
+                notes = ListeningHistoryService.shared.readNotes(for: podcast)
+            }
+        }
     }
 }
 

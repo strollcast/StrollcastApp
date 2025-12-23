@@ -65,6 +65,11 @@ struct PodcastDetailView: View {
             notes = ListeningHistoryService.shared.readNotes(for: podcast)
             showNotes = !notes.isEmpty
         }
+        .onReceive(NotificationCenter.default.publisher(for: .listeningHistoryUpdated)) { notification in
+            if let podcastId = notification.object as? String, podcastId == podcast.id {
+                notes = ListeningHistoryService.shared.readNotes(for: podcast)
+            }
+        }
     }
 
     @ViewBuilder

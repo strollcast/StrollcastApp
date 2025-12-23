@@ -93,6 +93,9 @@ class AudioPlayer: ObservableObject {
                 self?.isPlaying = false
                 self?.currentTime = 0
                 self?.player?.seek(to: .zero)
+                if let podcast = self?.currentPodcast {
+                    ListeningHistoryService.shared.clearLastPosition(for: podcast)
+                }
             }
         }
 
@@ -109,6 +112,7 @@ class AudioPlayer: ObservableObject {
                         self.duration = assetDuration.seconds
                     }
                     self.setupTimeObserver()
+                    self.restoreLastPosition()
                     self.updateNowPlayingInfo()
                 case .failed:
                     self.isLoading = false
@@ -134,6 +138,14 @@ class AudioPlayer: ObservableObject {
         }
     }
 
+    private func restoreLastPosition() {
+        guard let podcast = currentPodcast else { return }
+        let savedPosition = ListeningHistoryService.shared.getLastPosition(for: podcast)
+        if savedPosition > 0 && savedPosition < duration {
+            seek(to: savedPosition)
+        }
+    }
+
     func play() {
         player?.play()
         isPlaying = true
@@ -153,6 +165,15 @@ class AudioPlayer: ObservableObject {
         player?.pause()
         isPlaying = false
         updateNowPlayingInfo()
+        logPauseHistory()
+    }
+
+    private func logPauseHistory() {
+        guard let podcast = currentPodcast else { return }
+        let position = currentTime
+        Task.detached {
+            ListeningHistoryService.shared.logPause(podcast: podcast, position: position)
+        }
     }
 
     func togglePlayPause() {

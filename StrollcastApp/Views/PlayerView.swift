@@ -7,7 +7,7 @@ struct PlayerView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var notes: String = ""
-    @State private var showNotes = true
+    @State private var showNotesEditor = false
 
     var body: some View {
         NavigationStack {
@@ -84,19 +84,29 @@ struct PlayerView: View {
 
                 Divider()
 
-                // Notes editor
-                TextEditor(text: $notes)
-                    .font(.system(.body, design: .monospaced))
-                    .padding(8)
-                    .onChange(of: notes) { _, newValue in
-                        ListeningHistoryService.shared.saveNotes(newValue, for: podcast)
-                    }
+                // Notes preview (tap to edit)
+                ScrollView {
+                    Text(notes.isEmpty ? "Tap to add notes..." : notes)
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundColor(notes.isEmpty ? .secondary : .primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                }
+                .background(Color(.systemBackground))
+                .onTapGesture {
+                    audioPlayer.pause()
+                    showNotesEditor = true
+                }
+            }
+            .fullScreenCover(isPresented: $showNotesEditor) {
+                NotesEditorView(notes: $notes, podcast: podcast)
             }
             .navigationTitle("Now Playing")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Done") {
+                        audioPlayer.pause()
                         dismiss()
                     }
                 }
@@ -114,6 +124,54 @@ struct PlayerView: View {
             .onAppear {
                 notes = ListeningHistoryService.shared.readNotes(for: podcast)
             }
+            .onReceive(NotificationCenter.default.publisher(for: .listeningHistoryUpdated)) { notification in
+                if let podcastId = notification.object as? String, podcastId == podcast.id {
+                    notes = ListeningHistoryService.shared.readNotes(for: podcast)
+                }
+            }
+        }
+    }
+}
+
+struct NotesEditorView: View {
+    @Binding var notes: String
+    let podcast: Podcast
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var audioPlayer: AudioPlayer
+    @FocusState private var isEditorFocused: Bool
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                TextField("", text: $notes, axis: .vertical)
+                    .font(.system(.body, design: .monospaced))
+                    .padding(12)
+                    .padding(.bottom, 300)
+                    .focused($isEditorFocused)
+            }
+            .scrollDismissesKeyboard(.interactively)
+                .onChange(of: notes) { _, newValue in
+                    ListeningHistoryService.shared.saveNotes(newValue, for: podcast)
+                }
+                .navigationTitle("Notes")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Continue") {
+                            audioPlayer.play()
+                            dismiss()
+                        }
+                        .fontWeight(.semibold)
+                    }
+                }
+                .onAppear {
+                    isEditorFocused = true
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .listeningHistoryUpdated)) { notification in
+                    if let podcastId = notification.object as? String, podcastId == podcast.id {
+                        notes = ListeningHistoryService.shared.readNotes(for: podcast)
+                    }
+                }
         }
     }
 }
