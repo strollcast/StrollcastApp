@@ -138,6 +138,14 @@ class AudioPlayer: ObservableObject {
         player?.play()
         isPlaying = true
         updateNowPlayingInfo()
+        logListeningHistory()
+    }
+
+    private func logListeningHistory() {
+        guard let podcast = currentPodcast else { return }
+        Task.detached {
+            ListeningHistoryService.shared.logPlayback(podcast: podcast, position: self.currentTime)
+        }
     }
 
     func pause() {

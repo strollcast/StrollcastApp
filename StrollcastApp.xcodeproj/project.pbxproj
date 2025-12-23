@@ -18,6 +18,7 @@
 		A1000009 /* PodcastDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000009 /* PodcastDetailView.swift */; };
 		A1000010 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000010 /* PlayerView.swift */; };
 		A1000011 /* PodcastRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011 /* PodcastRowView.swift */; };
+		A1000012 /* ListeningHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* ListeningHistoryService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,8 @@
 		A2000010 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		A2000011 /* PodcastRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastRowView.swift; sourceTree = "<group>"; };
 		A2000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A2000013 /* ListeningHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningHistoryService.swift; sourceTree = "<group>"; };
+		A2000014 /* StrollcastApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StrollcastApp.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +68,7 @@
 				A4000004 /* Services */,
 				A2000003 /* Assets.xcassets */,
 				A2000012 /* Info.plist */,
+				A2000014 /* StrollcastApp.entitlements */,
 			);
 			path = StrollcastApp;
 			sourceTree = "<group>";
@@ -94,6 +98,7 @@
 				A2000005 /* PodcastService.swift */,
 				A2000006 /* DownloadManager.swift */,
 				A2000007 /* AudioPlayer.swift */,
+				A2000013 /* ListeningHistoryService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -185,6 +190,7 @@
 				A1000009 /* PodcastDetailView.swift in Sources */,
 				A1000010 /* PlayerView.swift in Sources */,
 				A1000011 /* PodcastRowView.swift in Sources */,
+				A1000012 /* ListeningHistoryService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -315,6 +321,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = StrollcastApp/StrollcastApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5GXR279Z9X;
@@ -345,6 +352,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = StrollcastApp/StrollcastApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5GXR279Z9X;
