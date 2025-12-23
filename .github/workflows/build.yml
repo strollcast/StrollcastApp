@@ -1,0 +1,60 @@
+name: Build and Release IPA
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Build archive
+        run: |
+          xcodebuild archive \
+            -project StrollcastApp.xcodeproj \
+            -scheme StrollcastApp \
+            -configuration Release \
+            -archivePath build/StrollcastApp.xcarchive \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+
+      - name: Create unsigned IPA
+        run: |
+          mkdir -p build/Payload
+          cp -r build/StrollcastApp.xcarchive/Products/Applications/StrollcastApp.app build/Payload/
+          cd build && zip -r StrollcastApp-unsigned.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StrollcastApp-unsigned
+          path: build/StrollcastApp-unsigned.ipa
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/StrollcastApp-unsigned.ipa
+          body: |
+            ## Installation
+
+            Download `StrollcastApp-unsigned.ipa` and install using:
+            - [AltStore](https://altstore.io)
+            - [Sideloadly](https://sideloadly.io)
+            - [Scarlet](https://usescarlet.com)
+
+            **Note:** Apps signed with a free Apple ID expire after 7 days.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
