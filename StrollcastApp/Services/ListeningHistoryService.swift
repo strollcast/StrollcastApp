@@ -63,7 +63,12 @@ class ListeningHistoryService {
     }
 
     private func appendPlaybackEntry(at url: URL, position: TimeInterval) {
-        guard var content = try? String(contentsOf: url, encoding: .utf8) else { return }
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else { return }
+
+        // Only add "Started on" if file doesn't already have one
+        if content.contains("Started on") {
+            return
+        }
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "EEE MMM d yyyy 'at' ha"
@@ -71,9 +76,9 @@ class ListeningHistoryService {
         let formattedPosition = formatTime(position)
 
         let newEntry = "\n\(dateString) playing from \(formattedPosition)"
-        content += newEntry
+        let updatedContent = content + newEntry
 
-        try? content.write(to: url, atomically: true, encoding: .utf8)
+        try? updatedContent.write(to: url, atomically: true, encoding: .utf8)
     }
 
     func logPause(podcast: Podcast, position: TimeInterval) {
@@ -82,8 +87,18 @@ class ListeningHistoryService {
               var content = try? String(contentsOf: url, encoding: .utf8) else { return }
 
         let formattedPosition = formatTime(position)
-        let newEntry = "\nPaused at \(formattedPosition)"
-        content += newEntry
+        let newEntry = "Paused at \(formattedPosition)"
+
+        // Check if last non-empty line is a Paused line and remove it
+        var lines = content.components(separatedBy: "\n")
+        while let last = lines.last, last.trimmingCharacters(in: .whitespaces).isEmpty {
+            lines.removeLast()
+        }
+        if let lastLine = lines.last, lastLine.hasPrefix("Paused at") {
+            lines.removeLast()
+        }
+        lines.append(newEntry)
+        content = lines.joined(separator: "\n")
 
         try? content.write(to: url, atomically: true, encoding: .utf8)
 
