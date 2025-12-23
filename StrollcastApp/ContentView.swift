@@ -2,7 +2,17 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        PodcastListView()
+        TabView {
+            PodcastListView()
+                .tabItem {
+                    Label("Podcasts", systemImage: "headphones")
+                }
+
+            NotesListView()
+                .tabItem {
+                    Label("Notes", systemImage: "note.text")
+                }
+        }
     }
 }
 

@@ -19,6 +19,7 @@
 		A1000010 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000010 /* PlayerView.swift */; };
 		A1000011 /* PodcastRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011 /* PodcastRowView.swift */; };
 		A1000012 /* ListeningHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* ListeningHistoryService.swift */; };
+		A1000013 /* NotesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000014 /* NotesListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		A2000011 /* PodcastRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastRowView.swift; sourceTree = "<group>"; };
 		A2000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2000013 /* ListeningHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningHistoryService.swift; sourceTree = "<group>"; };
+		A2000014 /* NotesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,6 +88,7 @@
 				A2000009 /* PodcastDetailView.swift */,
 				A2000010 /* PlayerView.swift */,
 				A2000011 /* PodcastRowView.swift */,
+				A2000014 /* NotesListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -189,6 +192,7 @@
 				A1000010 /* PlayerView.swift in Sources */,
 				A1000011 /* PodcastRowView.swift in Sources */,
 				A1000012 /* ListeningHistoryService.swift in Sources */,
+				A1000013 /* NotesListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
