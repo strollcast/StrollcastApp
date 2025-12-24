@@ -113,6 +113,19 @@ class ListeningHistoryService {
         UserDefaults.standard.string(forKey: "last_active_podcast_id")
     }
 
+    func isCompleted(podcast: Podcast) -> Bool {
+        // A podcast is completed if it has notes but no saved position
+        // (position is cleared when podcast finishes playing)
+        let hasHistory = hasNotes(for: podcast)
+        let position = getLastPosition(for: podcast)
+        return hasHistory && position == 0
+    }
+
+    func isInProgress(podcast: Podcast) -> Bool {
+        // A podcast is in progress if it has a saved position
+        return getLastPosition(for: podcast) > 0
+    }
+
     func readNotes(for podcast: Podcast) -> String {
         let url = fileURL(for: podcast)
         if fileManager.fileExists(atPath: url.path) {

@@ -7,6 +7,12 @@ struct PodcastListView: View {
     @State private var navigationPath = NavigationPath()
     @State private var hasNavigatedToLastPodcast = false
 
+    var unplayedPodcasts: [Podcast] {
+        podcastService.podcasts.filter { podcast in
+            !ListeningHistoryService.shared.isCompleted(podcast: podcast)
+        }
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ZStack {
@@ -32,7 +38,7 @@ struct PodcastListView: View {
                         .padding()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
-                        List(podcastService.podcasts) { podcast in
+                        List(unplayedPodcasts) { podcast in
                             NavigationLink(value: podcast) {
                                 PodcastRowView(podcast: podcast)
                             }

@@ -8,6 +8,11 @@ struct ContentView: View {
                     Label("Podcasts", systemImage: "headphones")
                 }
 
+            PlayedListView()
+                .tabItem {
+                    Label("Played", systemImage: "checkmark.circle")
+                }
+
             NotesListView()
                 .tabItem {
                     Label("Notes", systemImage: "note.text")
