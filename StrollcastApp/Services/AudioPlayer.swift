@@ -81,6 +81,8 @@ class AudioPlayer: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        ListeningHistoryService.shared.saveLastActivePodcast(podcast)
+
         let playerItem = AVPlayerItem(url: url)
         player = AVPlayer(playerItem: playerItem)
 

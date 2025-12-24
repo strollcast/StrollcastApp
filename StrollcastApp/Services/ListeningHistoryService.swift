@@ -105,6 +105,14 @@ class ListeningHistoryService {
         UserDefaults.standard.removeObject(forKey: "playback_position_\(podcast.id)")
     }
 
+    func saveLastActivePodcast(_ podcast: Podcast) {
+        UserDefaults.standard.set(podcast.id, forKey: "last_active_podcast_id")
+    }
+
+    func getLastActivePodcastId() -> String? {
+        UserDefaults.standard.string(forKey: "last_active_podcast_id")
+    }
+
     func readNotes(for podcast: Podcast) -> String {
         let url = fileURL(for: podcast)
         if fileManager.fileExists(atPath: url.path) {

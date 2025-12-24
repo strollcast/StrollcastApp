@@ -4,8 +4,11 @@ struct PodcastListView: View {
     @EnvironmentObject var podcastService: PodcastService
     @EnvironmentObject var audioPlayer: AudioPlayer
 
+    @State private var navigationPath = NavigationPath()
+    @State private var hasNavigatedToLastPodcast = false
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ZStack {
                 VStack(spacing: 0) {
                     if podcastService.isLoading {
@@ -30,7 +33,7 @@ struct PodcastListView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         List(podcastService.podcasts) { podcast in
-                            NavigationLink(destination: PodcastDetailView(podcast: podcast)) {
+                            NavigationLink(value: podcast) {
                                 PodcastRowView(podcast: podcast)
                             }
                         }
@@ -43,6 +46,9 @@ struct PodcastListView: View {
                 }
             }
             .navigationTitle("Strollcast")
+            .navigationDestination(for: Podcast.self) { podcast in
+                PodcastDetailView(podcast: podcast)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -54,12 +60,26 @@ struct PodcastListView: View {
                     }
                 }
             }
+            .onChange(of: podcastService.podcasts) { _, podcasts in
+                navigateToLastPodcastIfNeeded(podcasts: podcasts)
+            }
         }
         .task {
             if podcastService.podcasts.isEmpty {
                 await podcastService.fetchPodcasts()
             }
         }
+    }
+
+    private func navigateToLastPodcastIfNeeded(podcasts: [Podcast]) {
+        guard !hasNavigatedToLastPodcast,
+              !podcasts.isEmpty,
+              let lastPodcastId = ListeningHistoryService.shared.getLastActivePodcastId(),
+              let podcast = podcasts.first(where: { $0.id == lastPodcastId }) else {
+            return
+        }
+        hasNavigatedToLastPodcast = true
+        navigationPath.append(podcast)
     }
 }
 
