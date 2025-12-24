@@ -8,6 +8,7 @@ struct PlayerView: View {
 
     @State private var notes: String = ""
     @State private var showNotesEditor = false
+    @State private var pausedAtTime: TimeInterval = 0
 
     var body: some View {
         NavigationStack {
@@ -94,12 +95,13 @@ struct PlayerView: View {
                 }
                 .background(Color(.systemBackground))
                 .onTapGesture {
+                    pausedAtTime = audioPlayer.currentTime
                     audioPlayer.pause()
                     showNotesEditor = true
                 }
             }
             .fullScreenCover(isPresented: $showNotesEditor) {
-                NotesEditorView(notes: $notes, podcast: podcast)
+                NotesEditorView(notes: $notes, podcast: podcast, currentTime: pausedAtTime)
             }
             .navigationTitle("Now Playing")
             .navigationBarTitleDisplayMode(.inline)
@@ -136,43 +138,158 @@ struct PlayerView: View {
 struct NotesEditorView: View {
     @Binding var notes: String
     let podcast: Podcast
+    let currentTime: TimeInterval
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var audioPlayer: AudioPlayer
     @FocusState private var isEditorFocused: Bool
+    @State private var selectedTab = 1  // Start on Notes tab
+    @State private var transcript: [TranscriptCue] = []
+    @State private var isLoadingTranscript = true
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                TextField("", text: $notes, axis: .vertical)
-                    .font(.system(.body, design: .monospaced))
-                    .padding(12)
-                    .padding(.bottom, 300)
-                    .focused($isEditorFocused)
+            TabView(selection: $selectedTab) {
+                TranscriptView(
+                    transcript: transcript,
+                    currentTime: currentTime,
+                    isLoading: isLoadingTranscript
+                )
+                .tag(0)
+
+                ScrollView {
+                    TextField("", text: $notes, axis: .vertical)
+                        .font(.system(.body, design: .monospaced))
+                        .padding(12)
+                        .padding(.bottom, 300)
+                        .focused($isEditorFocused)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .tag(1)
             }
-            .scrollDismissesKeyboard(.interactively)
-                .onChange(of: notes) { _, newValue in
-                    ListeningHistoryService.shared.saveNotes(newValue, for: podcast)
-                }
-                .navigationTitle("Notes")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Continue") {
-                            audioPlayer.play()
-                            dismiss()
-                        }
-                        .fontWeight(.semibold)
+            .tabViewStyle(.page(indexDisplayMode: .always))
+            .indexViewStyle(.page(backgroundDisplayMode: .always))
+            .onChange(of: notes) { _, newValue in
+                ListeningHistoryService.shared.saveNotes(newValue, for: podcast)
+            }
+            .navigationTitle(selectedTab == 0 ? "Transcript" : "Notes")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Continue") {
+                        audioPlayer.play()
+                        dismiss()
                     }
+                    .fontWeight(.semibold)
                 }
-                .onAppear {
-                    isEditorFocused = true
+            }
+            .onAppear {
+                isEditorFocused = true
+                loadTranscript()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .listeningHistoryUpdated)) { notification in
+                if let podcastId = notification.object as? String, podcastId == podcast.id {
+                    notes = ListeningHistoryService.shared.readNotes(for: podcast)
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .listeningHistoryUpdated)) { notification in
-                    if let podcastId = notification.object as? String, podcastId == podcast.id {
-                        notes = ListeningHistoryService.shared.readNotes(for: podcast)
-                    }
-                }
+            }
         }
+    }
+
+    private func loadTranscript() {
+        Task { @MainActor in
+            let cues = await TranscriptService.shared.getTranscript(for: podcast)
+            transcript = cues ?? []
+            isLoadingTranscript = false
+        }
+    }
+}
+
+struct TranscriptView: View {
+    let transcript: [TranscriptCue]
+    let currentTime: TimeInterval
+    let isLoading: Bool
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                if isLoading {
+                    ProgressView("Loading transcript...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.top, 100)
+                } else if transcript.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "text.quote")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No Transcript Available")
+                            .font(.headline)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 100)
+                } else {
+                    LazyVStack(alignment: .leading, spacing: 12) {
+                        ForEach(Array(transcript.enumerated()), id: \.element.id) { index, cue in
+                            TranscriptCueView(
+                                cue: cue,
+                                isActive: currentTime >= cue.startTime && currentTime <= cue.endTime
+                            )
+                            .id(index)
+                        }
+                    }
+                    .padding(12)
+                    .padding(.bottom, 100)
+                }
+            }
+            .onAppear {
+                scrollToCurrentTime(proxy: proxy)
+            }
+        }
+    }
+
+    private func scrollToCurrentTime(proxy: ScrollViewProxy) {
+        if let index = TranscriptService.shared.findCueIndex(for: currentTime, in: transcript) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation {
+                    proxy.scrollTo(index, anchor: .center)
+                }
+            }
+        }
+    }
+}
+
+struct TranscriptCueView: View {
+    let cue: TranscriptCue
+    let isActive: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(formatTime(cue.startTime))
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .frame(width: 50, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 2) {
+                if let speaker = cue.speaker {
+                    Text(speaker)
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(isActive ? .blue : .secondary)
+                }
+                Text(cue.text)
+                    .font(.body)
+                    .foregroundColor(isActive ? .primary : .secondary)
+                    .fontWeight(isActive ? .medium : .regular)
+            }
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(isActive ? Color.blue.opacity(0.1) : Color.clear)
+        .cornerRadius(8)
+    }
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 

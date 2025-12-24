@@ -9,6 +9,9 @@ struct PodcastDetailView: View {
     @State private var showPlayer = false
     @State private var notes: String = ""
     @State private var showNotes = false
+    @State private var showTranscript = false
+    @State private var transcript: [TranscriptCue] = []
+    @State private var isLoadingTranscript = false
 
     var body: some View {
         ScrollView {
@@ -53,6 +56,10 @@ struct PodcastDetailView: View {
                 Divider()
 
                 notesSection
+
+                Divider()
+
+                transcriptSection
             }
             .padding()
         }
@@ -223,6 +230,98 @@ struct PodcastDetailView: View {
                     }
             }
         }
+    }
+
+    @ViewBuilder
+    private var transcriptSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button {
+                withAnimation {
+                    showTranscript.toggle()
+                }
+                if showTranscript && transcript.isEmpty && !isLoadingTranscript {
+                    loadTranscript()
+                }
+            } label: {
+                HStack {
+                    Text("Transcript")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    if !transcript.isEmpty {
+                        Image(systemName: "text.quote")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                    Spacer()
+                    Image(systemName: showTranscript ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            if showTranscript {
+                if isLoadingTranscript {
+                    HStack {
+                        ProgressView()
+                        Text("Loading transcript...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 20)
+                } else if transcript.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "text.quote")
+                            .font(.title)
+                            .foregroundColor(.secondary)
+                        Text("No transcript available")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(transcript) { cue in
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack {
+                                    Text(formatTime(cue.startTime))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    if let speaker = cue.speaker {
+                                        Text(speaker)
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                Text(cue.text)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+            }
+        }
+    }
+
+    private func loadTranscript() {
+        isLoadingTranscript = true
+        Task { @MainActor in
+            let cues = await TranscriptService.shared.getTranscript(for: podcast)
+            transcript = cues ?? []
+            isLoadingTranscript = false
+        }
+    }
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 
