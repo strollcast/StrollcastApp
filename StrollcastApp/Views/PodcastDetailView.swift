@@ -237,7 +237,10 @@ struct PodcastDetailView: View {
                     transcript: transcript,
                     notes: $notes,
                     podcast: podcast,
-                    currentTime: audioPlayer.currentPodcast?.id == podcast.id ? audioPlayer.currentTime : 0
+                    currentTime: audioPlayer.currentPodcast?.id == podcast.id ? audioPlayer.currentTime : 0,
+                    isPlaying: audioPlayer.currentPodcast?.id == podcast.id && audioPlayer.isPlaying,
+                    onPausePlayback: { audioPlayer.pause() },
+                    onResumePlayback: { audioPlayer.play() }
                 )
             }
         }
@@ -279,9 +282,14 @@ struct DetailTranscriptNotesView: View {
     @Binding var notes: String
     let podcast: Podcast
     let currentTime: TimeInterval
+    let isPlaying: Bool
+    let onPausePlayback: () -> Void
+    let onResumePlayback: () -> Void
 
     @State private var editingCueId: UUID? = nil
     @State private var newComment: String = ""
+    @State private var wasPlayingBeforeEdit = false
+    @State private var lastScrolledCueIndex: Int? = nil
     @FocusState private var isCommentFocused: Bool
 
     private var timestampedComments: [TimeInterval: String] {
@@ -293,56 +301,89 @@ struct DetailTranscriptNotesView: View {
         return dict
     }
 
+    private var currentCueIndex: Int? {
+        TranscriptService.shared.findCueIndex(for: currentTime, in: transcript)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if transcript.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "text.quote")
-                        .font(.title)
-                        .foregroundColor(.secondary)
-                    Text("No transcript available")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-            } else {
-                ForEach(transcript) { cue in
-                    let existingComment = findComment(for: cue.startTime)
-                    DetailCueWithNotesView(
-                        cue: cue,
-                        isActive: currentTime >= cue.startTime && currentTime <= cue.endTime,
-                        existingComment: existingComment,
-                        isEditing: editingCueId == cue.id,
-                        newComment: editingCueId == cue.id ? $newComment : .constant(""),
-                        isCommentFocused: _isCommentFocused,
-                        onTapAdd: {
-                            editingCueId = cue.id
-                            newComment = existingComment ?? ""
-                            isCommentFocused = true
-                        },
-                        onSubmit: {
-                            if !newComment.trimmingCharacters(in: .whitespaces).isEmpty {
-                                ListeningHistoryService.shared.addTimestampedComment(
-                                    newComment,
-                                    at: cue.startTime,
-                                    for: podcast
-                                )
+        ScrollViewReader { proxy in
+            VStack(alignment: .leading, spacing: 4) {
+                if transcript.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "text.quote")
+                            .font(.title)
+                            .foregroundColor(.secondary)
+                        Text("No transcript available")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    ForEach(Array(transcript.enumerated()), id: \.element.id) { index, cue in
+                        let existingComment = findComment(for: cue.startTime)
+                        DetailCueWithNotesView(
+                            cue: cue,
+                            isActive: currentTime >= cue.startTime && currentTime <= cue.endTime,
+                            existingComment: existingComment,
+                            isEditing: editingCueId == cue.id,
+                            newComment: editingCueId == cue.id ? $newComment : .constant(""),
+                            isCommentFocused: _isCommentFocused,
+                            onTapAdd: {
+                                wasPlayingBeforeEdit = isPlaying
+                                if isPlaying {
+                                    onPausePlayback()
+                                }
+                                editingCueId = cue.id
+                                newComment = existingComment ?? ""
+                                isCommentFocused = true
+                            },
+                            onSubmit: {
+                                if !newComment.trimmingCharacters(in: .whitespaces).isEmpty {
+                                    ListeningHistoryService.shared.addTimestampedComment(
+                                        newComment,
+                                        at: cue.startTime,
+                                        for: podcast
+                                    )
+                                }
+                                editingCueId = nil
+                                newComment = ""
+                                if wasPlayingBeforeEdit {
+                                    onResumePlayback()
+                                }
+                            },
+                            onCancel: {
+                                editingCueId = nil
+                                newComment = ""
+                                if wasPlayingBeforeEdit {
+                                    onResumePlayback()
+                                }
                             }
-                            editingCueId = nil
-                            newComment = ""
-                        },
-                        onCancel: {
-                            editingCueId = nil
-                            newComment = ""
-                        }
-                    )
+                        )
+                        .id(index)
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color(.systemGray6))
+            .cornerRadius(8)
+            .onChange(of: currentCueIndex) { _, newIndex in
+                if let index = newIndex, editingCueId == nil, index != lastScrolledCueIndex {
+                    lastScrolledCueIndex = index
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        proxy.scrollTo(index, anchor: .center)
+                    }
+                }
+            }
+            .onChange(of: editingCueId) { _, newEditingId in
+                if let editingId = newEditingId,
+                   let index = transcript.firstIndex(where: { $0.id == editingId }) {
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        proxy.scrollTo(index, anchor: .top)
+                    }
                 }
             }
         }
-        .padding(12)
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
     }
 
     private func findComment(for timestamp: TimeInterval) -> String? {
