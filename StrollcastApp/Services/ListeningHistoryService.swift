@@ -61,36 +61,8 @@ class ListeningHistoryService {
     }
 
     func logPause(podcast: Podcast, position: TimeInterval) {
-        let url = fileURL(for: podcast)
-        guard fileManager.fileExists(atPath: url.path),
-              var content = try? String(contentsOf: url, encoding: .utf8) else { return }
-
-        let formattedPosition = formatTime(position)
-        let newEntry = "Paused at \(formattedPosition)"
-
-        var lines = content.components(separatedBy: "\n")
-
-        // Remove trailing empty lines
-        while let last = lines.last, last.trimmingCharacters(in: .whitespaces).isEmpty {
-            lines.removeLast()
-        }
-
-        // Only remove "Paused at" if it's the last line (user hasn't added content after it)
-        if let lastLine = lines.last, lastLine.hasPrefix("Paused at") {
-            lines.removeLast()
-        }
-
-        lines.append(newEntry)
-        content = lines.joined(separator: "\n")
-
-        try? content.write(to: url, atomically: true, encoding: .utf8)
-
         // Save position for resume
         saveLastPosition(position, for: podcast)
-
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .listeningHistoryUpdated, object: podcast.id)
-        }
     }
 
     func saveLastPosition(_ position: TimeInterval, for podcast: Podcast) {
@@ -215,11 +187,6 @@ class ListeningHistoryService {
     }
 
     private func createNewFile(at url: URL, podcast: Podcast, position: TimeInterval) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "EEE MMM d yyyy 'at' ha"
-        let dateString = dateFormatter.string(from: Date())
-        let formattedPosition = formatTime(position)
-
         let content = """
         ---
         id: \(podcast.id)
@@ -230,10 +197,6 @@ class ListeningHistoryService {
         audioPath: \(podcast.audioPath)
         paperUrl: \(podcast.paperUrl ?? "")
         ---
-
-        # Listening History
-
-        Started on \(dateString), playback time \(formattedPosition)
 
         ## Notes
 
