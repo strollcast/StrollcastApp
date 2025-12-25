@@ -123,8 +123,7 @@ struct PodcastRowView: View {
 
         switch state {
         case .notDownloaded:
-            Image(systemName: "arrow.down.circle")
-                .foregroundColor(.secondary)
+            EmptyView()
         case .downloading(let progress):
             ZStack {
                 Circle()
@@ -144,6 +143,7 @@ struct PodcastRowView: View {
                 .foregroundColor(.red)
         }
     }
+
 }
 
 #Preview {

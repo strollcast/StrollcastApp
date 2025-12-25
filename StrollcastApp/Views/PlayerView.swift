@@ -141,37 +141,19 @@ struct NotesEditorView: View {
     let currentTime: TimeInterval
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var audioPlayer: AudioPlayer
-    @FocusState private var isEditorFocused: Bool
-    @State private var selectedTab = 1  // Start on Notes tab
     @State private var transcript: [TranscriptCue] = []
     @State private var isLoadingTranscript = true
 
     var body: some View {
         NavigationStack {
-            TabView(selection: $selectedTab) {
-                TranscriptView(
-                    transcript: transcript,
-                    currentTime: currentTime,
-                    isLoading: isLoadingTranscript
-                )
-                .tag(0)
-
-                ScrollView {
-                    TextField("", text: $notes, axis: .vertical)
-                        .font(.system(.body, design: .monospaced))
-                        .padding(12)
-                        .padding(.bottom, 300)
-                        .focused($isEditorFocused)
-                }
-                .scrollDismissesKeyboard(.interactively)
-                .tag(1)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
-            .onChange(of: notes) { _, newValue in
-                ListeningHistoryService.shared.saveNotes(newValue, for: podcast)
-            }
-            .navigationTitle(selectedTab == 0 ? "Transcript" : "Notes")
+            CombinedTranscriptNotesView(
+                transcript: transcript,
+                notes: $notes,
+                podcast: podcast,
+                currentTime: currentTime,
+                isLoading: isLoadingTranscript
+            )
+            .navigationTitle("Transcript & Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -183,7 +165,6 @@ struct NotesEditorView: View {
                 }
             }
             .onAppear {
-                isEditorFocused = true
                 loadTranscript()
             }
             .onReceive(NotificationCenter.default.publisher(for: .listeningHistoryUpdated)) { notification in
@@ -203,10 +184,25 @@ struct NotesEditorView: View {
     }
 }
 
-struct TranscriptView: View {
+struct CombinedTranscriptNotesView: View {
     let transcript: [TranscriptCue]
+    @Binding var notes: String
+    let podcast: Podcast
     let currentTime: TimeInterval
     let isLoading: Bool
+
+    @State private var editingCueId: UUID? = nil
+    @State private var newComment: String = ""
+    @FocusState private var isCommentFocused: Bool
+
+    private var timestampedComments: [TimeInterval: String] {
+        let comments = ListeningHistoryService.shared.parseTimestampedComments(from: notes)
+        var dict: [TimeInterval: String] = [:]
+        for comment in comments {
+            dict[comment.timestamp] = comment.text
+        }
+        return dict
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -222,15 +218,42 @@ struct TranscriptView: View {
                             .foregroundColor(.secondary)
                         Text("No Transcript Available")
                             .font(.headline)
+                        Text("Add general notes below")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 100)
                 } else {
-                    LazyVStack(alignment: .leading, spacing: 12) {
+                    LazyVStack(alignment: .leading, spacing: 4) {
                         ForEach(Array(transcript.enumerated()), id: \.element.id) { index, cue in
-                            TranscriptCueView(
+                            TranscriptCueWithNotesView(
                                 cue: cue,
-                                isActive: currentTime >= cue.startTime && currentTime <= cue.endTime
+                                isActive: currentTime >= cue.startTime && currentTime <= cue.endTime,
+                                existingComment: findComment(for: cue.startTime),
+                                isEditing: editingCueId == cue.id,
+                                newComment: editingCueId == cue.id ? $newComment : .constant(""),
+                                isCommentFocused: _isCommentFocused,
+                                onTapAdd: {
+                                    editingCueId = cue.id
+                                    newComment = ""
+                                    isCommentFocused = true
+                                },
+                                onSubmit: {
+                                    if !newComment.trimmingCharacters(in: .whitespaces).isEmpty {
+                                        ListeningHistoryService.shared.addTimestampedComment(
+                                            newComment,
+                                            at: cue.startTime,
+                                            for: podcast
+                                        )
+                                    }
+                                    editingCueId = nil
+                                    newComment = ""
+                                },
+                                onCancel: {
+                                    editingCueId = nil
+                                    newComment = ""
+                                }
                             )
                             .id(index)
                         }
@@ -239,10 +262,21 @@ struct TranscriptView: View {
                     .padding(.bottom, 100)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .onAppear {
                 scrollToCurrentTime(proxy: proxy)
             }
         }
+    }
+
+    private func findComment(for timestamp: TimeInterval) -> String? {
+        // Find comment within 2 second tolerance
+        for (time, comment) in timestampedComments {
+            if abs(time - timestamp) < 2.0 {
+                return comment
+            }
+        }
+        return nil
     }
 
     private func scrollToCurrentTime(proxy: ScrollViewProxy) {
@@ -256,34 +290,101 @@ struct TranscriptView: View {
     }
 }
 
-struct TranscriptCueView: View {
+struct TranscriptCueWithNotesView: View {
     let cue: TranscriptCue
     let isActive: Bool
+    let existingComment: String?
+    let isEditing: Bool
+    @Binding var newComment: String
+    @FocusState var isCommentFocused: Bool
+    let onTapAdd: () -> Void
+    let onSubmit: () -> Void
+    let onCancel: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text(formatTime(cue.startTime))
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .frame(width: 50, alignment: .leading)
+        VStack(alignment: .leading, spacing: 4) {
+            // Transcript cue row
+            HStack(alignment: .top, spacing: 8) {
+                Text(formatTime(cue.startTime))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(width: 45, alignment: .leading)
 
-            VStack(alignment: .leading, spacing: 2) {
-                if let speaker = cue.speaker {
-                    Text(speaker)
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(isActive ? .blue : .secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    if let speaker = cue.speaker {
+                        Text(speaker)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(isActive ? .blue : .secondary)
+                    }
+                    Text(cue.text)
+                        .font(.body)
+                        .foregroundColor(isActive ? .primary : .secondary)
+                        .fontWeight(isActive ? .medium : .regular)
                 }
-                Text(cue.text)
-                    .font(.body)
-                    .foregroundColor(isActive ? .primary : .secondary)
-                    .fontWeight(isActive ? .medium : .regular)
+
+                Spacer()
+
+                // Add note button (only show if no existing comment and not editing)
+                if existingComment == nil && !isEditing {
+                    Button(action: onTapAdd) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                    }
+                    .buttonStyle(.plain)
+                    .frame(width: 44, height: 44)
+                }
+            }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 8)
+            .background(isActive ? Color.blue.opacity(0.1) : Color.clear)
+            .cornerRadius(8)
+
+            // Existing comment display
+            if let comment = existingComment {
+                HStack(spacing: 6) {
+                    Image(systemName: "note.text")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                    Text(comment)
+                        .font(.callout)
+                        .foregroundColor(.primary)
+                }
+                .padding(.leading, 53)
+                .padding(.vertical, 4)
+                .padding(.trailing, 8)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(6)
+            }
+
+            // Inline comment editor
+            if isEditing {
+                HStack(spacing: 8) {
+                    TextField("Add a note...", text: $newComment)
+                        .font(.callout)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($isCommentFocused)
+                        .onSubmit(onSubmit)
+
+                    Button(action: onSubmit) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(newComment.trimmingCharacters(in: .whitespaces).isEmpty)
+
+                    Button(action: onCancel) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.leading, 53)
+                .padding(.trailing, 8)
+                .padding(.vertical, 4)
             }
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
-        .background(isActive ? Color.blue.opacity(0.1) : Color.clear)
-        .cornerRadius(8)
     }
 
     private func formatTime(_ time: TimeInterval) -> String {

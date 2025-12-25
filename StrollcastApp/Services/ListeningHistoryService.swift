@@ -144,6 +144,76 @@ class ListeningHistoryService {
         return fileManager.fileExists(atPath: url.path)
     }
 
+    // MARK: - Timestamped Comments
+
+    struct TimestampedComment {
+        let timestamp: TimeInterval
+        let text: String
+    }
+
+    func parseTimestampedComments(from notes: String) -> [TimestampedComment] {
+        var comments: [TimestampedComment] = []
+        let pattern = #"\[(\d+):(\d{2})\]\s*(.+)"#
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .anchorsMatchLines) else {
+            return comments
+        }
+
+        let range = NSRange(notes.startIndex..<notes.endIndex, in: notes)
+        let matches = regex.matches(in: notes, options: [], range: range)
+
+        for match in matches {
+            guard match.numberOfRanges == 4,
+                  let minutesRange = Range(match.range(at: 1), in: notes),
+                  let secondsRange = Range(match.range(at: 2), in: notes),
+                  let textRange = Range(match.range(at: 3), in: notes) else {
+                continue
+            }
+
+            let minutes = Double(notes[minutesRange]) ?? 0
+            let seconds = Double(notes[secondsRange]) ?? 0
+            let timestamp = minutes * 60 + seconds
+            let text = String(notes[textRange]).trimmingCharacters(in: .whitespaces)
+
+            if !text.isEmpty {
+                comments.append(TimestampedComment(timestamp: timestamp, text: text))
+            }
+        }
+
+        return comments
+    }
+
+    func addTimestampedComment(_ comment: String, at time: TimeInterval, for podcast: Podcast) {
+        var notes = readNotes(for: podcast)
+        let formattedTime = formatTime(time)
+        let newComment = "[\(formattedTime)] \(comment)"
+
+        // Find the ## Notes section and add after it
+        if let notesRange = notes.range(of: "## Notes") {
+            // Find the end of the ## Notes line
+            if let lineEnd = notes[notesRange.upperBound...].firstIndex(of: "\n") {
+                let insertIndex = notes.index(after: lineEnd)
+                notes.insert(contentsOf: "\n\(newComment)", at: insertIndex)
+            } else {
+                notes.append("\n\n\(newComment)")
+            }
+        } else {
+            // No ## Notes section, just append
+            notes.append("\n\(newComment)")
+        }
+
+        saveNotes(notes, for: podcast)
+
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .listeningHistoryUpdated, object: podcast.id)
+        }
+    }
+
+    func getComment(for timestamp: TimeInterval, in notes: String, tolerance: TimeInterval = 2.0) -> String? {
+        let comments = parseTimestampedComments(from: notes)
+        return comments.first { abs($0.timestamp - timestamp) < tolerance }?.text
+    }
+
     private func createNewFile(at url: URL, podcast: Podcast, position: TimeInterval) {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "EEE MMM d yyyy 'at' ha"
