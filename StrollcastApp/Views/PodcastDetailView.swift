@@ -6,53 +6,44 @@ struct PodcastDetailView: View {
     @EnvironmentObject var downloadManager: DownloadManager
     @EnvironmentObject var audioPlayer: AudioPlayer
 
-    @State private var showPlayer = false
     @State private var notes: String = ""
-    @State private var showTranscriptNotes = false
     @State private var transcript: [TranscriptCue] = []
-    @State private var isLoadingTranscript = false
+    @State private var isLoadingTranscript = true
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text(String(podcast.year))
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.blue.opacity(0.1))
-                            .foregroundColor(.blue)
-                            .cornerRadius(6)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Header with year, duration, paper link
+                    headerSection
 
-                        Text(podcast.duration)
-                            .font(.subheadline)
+                    // Title and authors
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(podcast.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        Text(podcast.authors)
+                            .font(.headline)
                             .foregroundColor(.secondary)
                     }
 
-                    Text(podcast.title)
-                        .font(.title2)
-                        .fontWeight(.bold)
-
-                    Text(podcast.authors)
-                        .font(.headline)
+                    // Description
+                    Text(podcast.description)
+                        .font(.body)
                         .foregroundColor(.secondary)
+
+                    Divider()
+
+                    // Transcript & Notes (always visible)
+                    transcriptNotesSection
                 }
-
-                Text(podcast.description)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-
-                Divider()
-
-                playSection
-
-                Divider()
-
-                transcriptNotesSection
+                .padding()
+                .padding(.bottom, 80) // Space for player bar
             }
-            .padding()
+
+            // Fixed player bar at bottom
+            playerBar
         }
         .navigationTitle("Episode")
         .navigationBarTitleDisplayMode(.inline)
@@ -61,15 +52,41 @@ struct PodcastDetailView: View {
                 downloadMenu
             }
         }
-        .sheet(isPresented: $showPlayer) {
-            PlayerView(podcast: podcast)
-        }
         .onAppear {
             notes = ListeningHistoryService.shared.readNotes(for: podcast)
+            loadTranscript()
+            loadAudioIfNeeded()
         }
         .onReceive(NotificationCenter.default.publisher(for: .listeningHistoryUpdated)) { notification in
             if let podcastId = notification.object as? String, podcastId == podcast.id {
                 notes = ListeningHistoryService.shared.readNotes(for: podcast)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var headerSection: some View {
+        HStack {
+            Text(String(podcast.year))
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.blue.opacity(0.1))
+                .foregroundColor(.blue)
+                .cornerRadius(6)
+
+            Text(podcast.duration)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            if let paperURL = podcast.paperURL {
+                Link(destination: paperURL) {
+                    Label("Paper", systemImage: "doc.text")
+                        .font(.subheadline)
+                }
             }
         }
     }
@@ -134,106 +151,126 @@ struct PodcastDetailView: View {
     }
 
     @ViewBuilder
-    private var playSection: some View {
-        let state = downloadManager.downloadState(for: podcast)
-        let isCurrentlyPlaying = audioPlayer.currentPodcast?.id == podcast.id
+    private var playerBar: some View {
+        let isCurrentPodcast = audioPlayer.currentPodcast?.id == podcast.id
 
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Playback")
-                .font(.headline)
+        VStack(spacing: 8) {
+            // Progress bar
+            if isCurrentPodcast && audioPlayer.duration > 0 {
+                VStack(spacing: 2) {
+                    Slider(
+                        value: Binding(
+                            get: { audioPlayer.currentTime },
+                            set: { audioPlayer.seek(to: $0) }
+                        ),
+                        in: 0...max(audioPlayer.duration, 1)
+                    )
 
-            if case .downloaded(let url) = state {
-                if isCurrentlyPlaying {
-                    Button {
-                        showPlayer = true
-                    } label: {
-                        Label("Open Player", systemImage: "music.note")
-                            .frame(maxWidth: .infinity)
+                    HStack {
+                        Text(audioPlayer.formattedTime(audioPlayer.currentTime))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .monospacedDigit()
+                        Spacer()
+                        Text(audioPlayer.formattedTime(audioPlayer.duration))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .monospacedDigit()
                     }
-                    .buttonStyle(.borderedProminent)
-                } else {
-                    Button {
-                        audioPlayer.load(podcast: podcast, from: url)
-                        audioPlayer.play()
-                        showPlayer = true
-                    } label: {
-                        Label("Play Episode", systemImage: "play.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
                 }
-            } else {
-                Text("Download the episode first to play it offline")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                .padding(.horizontal)
+            }
+
+            // Playback controls
+            HStack(spacing: 40) {
+                Button {
+                    audioPlayer.skipBackward()
+                } label: {
+                    Image(systemName: "gobackward.15")
+                        .font(.title2)
+                }
+                .disabled(!isCurrentPodcast)
 
                 Button {
-                    audioPlayer.load(podcast: podcast, from: podcast.audioURL)
-                    audioPlayer.play()
-                    showPlayer = true
+                    if isCurrentPodcast {
+                        audioPlayer.togglePlayPause()
+                    } else {
+                        startPlayback()
+                    }
                 } label: {
-                    Label("Stream Episode", systemImage: "antenna.radiowaves.left.and.right")
-                        .frame(maxWidth: .infinity)
+                    Image(systemName: isCurrentPodcast && audioPlayer.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.system(size: 50))
                 }
-                .buttonStyle(.bordered)
+
+                Button {
+                    audioPlayer.skipForward()
+                } label: {
+                    Image(systemName: "goforward.15")
+                        .font(.title2)
+                }
+                .disabled(!isCurrentPodcast)
             }
+            .padding(.bottom, 8)
         }
+        .padding(.top, 8)
+        .background(Color(.systemBackground))
+        .shadow(color: .black.opacity(0.1), radius: 4, y: -2)
     }
 
     @ViewBuilder
     private var transcriptNotesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Button {
-                withAnimation {
-                    showTranscriptNotes.toggle()
-                }
-                if showTranscriptNotes && transcript.isEmpty && !isLoadingTranscript {
-                    loadTranscript()
-                }
-            } label: {
+            Text("Transcript & Notes")
+                .font(.headline)
+
+            if isLoadingTranscript {
                 HStack {
-                    Text("Transcript & Notes")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    if !transcript.isEmpty || !notes.isEmpty {
-                        Image(systemName: "text.quote")
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    }
-                    Spacer()
-                    Image(systemName: showTranscriptNotes ? "chevron.up" : "chevron.down")
+                    ProgressView()
+                    Text("Loading transcript...")
+                        .font(.caption)
                         .foregroundColor(.secondary)
                 }
-            }
-
-            if showTranscriptNotes {
-                if isLoadingTranscript {
-                    HStack {
-                        ProgressView()
-                        Text("Loading transcript...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
-                } else {
-                    DetailTranscriptNotesView(
-                        transcript: transcript,
-                        notes: $notes,
-                        podcast: podcast
-                    )
-                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 20)
+            } else {
+                DetailTranscriptNotesView(
+                    transcript: transcript,
+                    notes: $notes,
+                    podcast: podcast,
+                    currentTime: audioPlayer.currentPodcast?.id == podcast.id ? audioPlayer.currentTime : 0
+                )
             }
         }
     }
 
     private func loadTranscript() {
-        isLoadingTranscript = true
         Task { @MainActor in
             let cues = await TranscriptService.shared.getTranscript(for: podcast)
             transcript = cues ?? []
             isLoadingTranscript = false
         }
+    }
+
+    private func loadAudioIfNeeded() {
+        // If this podcast is not currently loaded, prepare it
+        if audioPlayer.currentPodcast?.id != podcast.id {
+            let state = downloadManager.downloadState(for: podcast)
+            if case .downloaded(let url) = state {
+                audioPlayer.load(podcast: podcast, from: url)
+            } else {
+                audioPlayer.load(podcast: podcast, from: podcast.audioURL)
+            }
+        }
+    }
+
+    private func startPlayback() {
+        let state = downloadManager.downloadState(for: podcast)
+        if case .downloaded(let url) = state {
+            audioPlayer.load(podcast: podcast, from: url)
+        } else {
+            audioPlayer.load(podcast: podcast, from: podcast.audioURL)
+        }
+        audioPlayer.play()
     }
 }
 
@@ -241,6 +278,7 @@ struct DetailTranscriptNotesView: View {
     let transcript: [TranscriptCue]
     @Binding var notes: String
     let podcast: Podcast
+    let currentTime: TimeInterval
 
     @State private var editingCueId: UUID? = nil
     @State private var newComment: String = ""
@@ -270,15 +308,17 @@ struct DetailTranscriptNotesView: View {
                 .padding(.vertical, 20)
             } else {
                 ForEach(transcript) { cue in
+                    let existingComment = findComment(for: cue.startTime)
                     DetailCueWithNotesView(
                         cue: cue,
-                        existingComment: findComment(for: cue.startTime),
+                        isActive: currentTime >= cue.startTime && currentTime <= cue.endTime,
+                        existingComment: existingComment,
                         isEditing: editingCueId == cue.id,
                         newComment: editingCueId == cue.id ? $newComment : .constant(""),
                         isCommentFocused: _isCommentFocused,
                         onTapAdd: {
                             editingCueId = cue.id
-                            newComment = ""
+                            newComment = existingComment ?? ""
                             isCommentFocused = true
                         },
                         onSubmit: {
@@ -317,6 +357,7 @@ struct DetailTranscriptNotesView: View {
 
 struct DetailCueWithNotesView: View {
     let cue: TranscriptCue
+    let isActive: Bool
     let existingComment: String?
     let isEditing: Bool
     @Binding var newComment: String
@@ -327,78 +368,81 @@ struct DetailCueWithNotesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
+            // Transcript cue
             HStack(alignment: .top, spacing: 8) {
                 Text(formatTime(cue.startTime))
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .frame(width: 45, alignment: .leading)
+                    .frame(width: 40, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 2) {
                     if let speaker = cue.speaker {
                         Text(speaker)
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(.blue)
+                            .foregroundColor(isActive ? .blue : .secondary)
                     }
                     Text(cue.text)
                         .font(.body)
-                        .foregroundColor(.primary)
-                }
-
-                Spacer()
-
-                if existingComment == nil && !isEditing {
-                    Button(action: onTapAdd) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.blue)
-                    }
-                    .buttonStyle(.plain)
-                    .frame(width: 44, height: 44)
+                        .foregroundColor(isActive ? .primary : .secondary)
+                        .fontWeight(isActive ? .medium : .regular)
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 6)
+            .padding(.leading, 4)
+            .background(isActive ? Color.blue.opacity(0.1) : Color.clear)
+            .cornerRadius(8)
 
-            if let comment = existingComment {
-                HStack(spacing: 6) {
-                    Image(systemName: "note.text")
-                        .font(.caption2)
-                        .foregroundColor(.orange)
-                    Text(comment)
-                        .font(.callout)
-                        .foregroundColor(.primary)
-                }
-                .padding(.leading, 53)
-                .padding(.vertical, 4)
-                .padding(.trailing, 8)
-                .background(Color.orange.opacity(0.15))
-                .cornerRadius(6)
-            }
-
+            // Note section (always visible)
             if isEditing {
-                HStack(spacing: 8) {
-                    TextField("Add a note...", text: $newComment)
+                // Editable multi-line text field
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField("Add note...", text: $newComment, axis: .vertical)
                         .font(.callout)
+                        .lineLimit(3...6)
                         .textFieldStyle(.roundedBorder)
                         .focused($isCommentFocused)
-                        .onSubmit(onSubmit)
 
-                    Button(action: onSubmit) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(newComment.trimmingCharacters(in: .whitespaces).isEmpty)
+                    HStack {
+                        Spacer()
+                        Button("Cancel") {
+                            onCancel()
+                        }
+                        .foregroundColor(.secondary)
 
-                    Button(action: onCancel) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                        Button("Save") {
+                            onSubmit()
+                        }
+                        .fontWeight(.semibold)
+                        .disabled(newComment.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
-                    .buttonStyle(.plain)
+                    .font(.callout)
                 }
-                .padding(.leading, 53)
-                .padding(.trailing, 8)
+                .padding(.leading, 48)
                 .padding(.vertical, 4)
+            } else if let comment = existingComment {
+                // Show existing comment (tap to edit)
+                Text(comment)
+                    .font(.callout)
+                    .foregroundColor(.primary)
+                    .padding(.leading, 48)
+                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(6)
+                    .onTapGesture {
+                        onTapAdd()
+                    }
+            } else {
+                // Placeholder to add note
+                Text("Add note")
+                    .font(.callout)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 48)
+                    .padding(.vertical, 4)
+                    .onTapGesture {
+                        onTapAdd()
+                    }
             }
         }
     }

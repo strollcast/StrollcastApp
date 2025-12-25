@@ -92,8 +92,6 @@ struct PodcastListView: View {
 struct MiniPlayerView: View {
     @EnvironmentObject var audioPlayer: AudioPlayer
 
-    @State private var showFullPlayer = false
-
     var body: some View {
         if let podcast = audioPlayer.currentPodcast {
             VStack(spacing: 0) {
@@ -113,23 +111,32 @@ struct MiniPlayerView: View {
 
                     Spacer()
 
-                    Button {
-                        audioPlayer.togglePlayPause()
-                    } label: {
-                        Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.title2)
+                    HStack(spacing: 16) {
+                        Button {
+                            audioPlayer.skipBackward()
+                        } label: {
+                            Image(systemName: "gobackward.15")
+                                .font(.body)
+                        }
+
+                        Button {
+                            audioPlayer.togglePlayPause()
+                        } label: {
+                            Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
+                                .font(.title2)
+                        }
+
+                        Button {
+                            audioPlayer.skipForward()
+                        } label: {
+                            Image(systemName: "goforward.15")
+                                .font(.body)
+                        }
                     }
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 10)
                 .background(Color(.systemBackground))
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    showFullPlayer = true
-                }
-            }
-            .sheet(isPresented: $showFullPlayer) {
-                PlayerView(podcast: podcast)
             }
         }
     }
