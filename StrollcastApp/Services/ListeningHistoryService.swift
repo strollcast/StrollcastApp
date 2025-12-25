@@ -160,6 +160,9 @@ class ListeningHistoryService {
         let formattedTime = formatTime(time)
         let newComment = "[\(formattedTime)] \(comment)"
 
+        // First, remove any existing comment at this timestamp (within tolerance)
+        notes = removeExistingComment(at: time, from: notes)
+
         // Find the ## Notes section and add after it
         if let notesRange = notes.range(of: "## Notes") {
             // Find the end of the ## Notes line
@@ -179,6 +182,34 @@ class ListeningHistoryService {
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .listeningHistoryUpdated, object: podcast.id)
         }
+    }
+
+    private func removeExistingComment(at time: TimeInterval, from notes: String, tolerance: TimeInterval = 2.0) -> String {
+        let lines = notes.components(separatedBy: "\n")
+        let pattern = #"^\[(\d+):(\d{2})\]"#
+
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return notes
+        }
+
+        let filteredLines = lines.filter { line in
+            let range = NSRange(line.startIndex..<line.endIndex, in: line)
+            guard let match = regex.firstMatch(in: line, options: [], range: range),
+                  match.numberOfRanges == 3,
+                  let minutesRange = Range(match.range(at: 1), in: line),
+                  let secondsRange = Range(match.range(at: 2), in: line) else {
+                return true // Keep non-timestamp lines
+            }
+
+            let minutes = Double(line[minutesRange]) ?? 0
+            let seconds = Double(line[secondsRange]) ?? 0
+            let lineTimestamp = minutes * 60 + seconds
+
+            // Remove if within tolerance of the target time
+            return abs(lineTimestamp - time) >= tolerance
+        }
+
+        return filteredLines.joined(separator: "\n")
     }
 
     func getComment(for timestamp: TimeInterval, in notes: String, tolerance: TimeInterval = 2.0) -> String? {

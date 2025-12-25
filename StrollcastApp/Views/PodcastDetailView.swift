@@ -240,7 +240,8 @@ struct PodcastDetailView: View {
                     currentTime: audioPlayer.currentPodcast?.id == podcast.id ? audioPlayer.currentTime : 0,
                     isPlaying: audioPlayer.currentPodcast?.id == podcast.id && audioPlayer.isPlaying,
                     onPausePlayback: { audioPlayer.pause() },
-                    onResumePlayback: { audioPlayer.play() }
+                    onResumePlayback: { audioPlayer.play() },
+                    onSeekTo: { time in audioPlayer.seek(to: time) }
                 )
             }
         }
@@ -285,6 +286,7 @@ struct DetailTranscriptNotesView: View {
     let isPlaying: Bool
     let onPausePlayback: () -> Void
     let onResumePlayback: () -> Void
+    let onSeekTo: (TimeInterval) -> Void
 
     @State private var editingCueId: UUID? = nil
     @State private var newComment: String = ""
@@ -329,6 +331,9 @@ struct DetailTranscriptNotesView: View {
                             isEditing: editingCueId == cue.id,
                             newComment: editingCueId == cue.id ? $newComment : .constant(""),
                             isCommentFocused: _isCommentFocused,
+                            onTapCue: {
+                                onSeekTo(cue.startTime)
+                            },
                             onTapAdd: {
                                 wasPlayingBeforeEdit = isPlaying
                                 if isPlaying {
@@ -403,6 +408,7 @@ struct DetailCueWithNotesView: View {
     let isEditing: Bool
     @Binding var newComment: String
     @FocusState var isCommentFocused: Bool
+    let onTapCue: () -> Void
     let onTapAdd: () -> Void
     let onSubmit: () -> Void
     let onCancel: () -> Void
@@ -433,6 +439,10 @@ struct DetailCueWithNotesView: View {
             .padding(.leading, 4)
             .background(isActive ? Color.blue.opacity(0.1) : Color.clear)
             .cornerRadius(8)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTapCue()
+            }
 
             // Note section (always visible)
             if isEditing {
