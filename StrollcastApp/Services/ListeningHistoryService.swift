@@ -58,6 +58,11 @@ class ListeningHistoryService {
         if !fileManager.fileExists(atPath: url.path) {
             createNewFile(at: url, podcast: podcast, position: position)
         }
+
+        // Add to Zotero if configured
+        Task {
+            await ZoteroService.shared.addPodcastToZotero(podcast)
+        }
     }
 
     func logPause(podcast: Podcast, position: TimeInterval) {
@@ -181,6 +186,11 @@ class ListeningHistoryService {
 
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .listeningHistoryUpdated, object: podcast.id)
+        }
+
+        // Sync to Zotero if configured
+        Task {
+            await ZoteroService.shared.syncNotesToZotero(notes, for: podcast)
         }
     }
 

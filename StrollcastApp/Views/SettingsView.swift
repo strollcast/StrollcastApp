@@ -96,6 +96,34 @@ struct SettingsView: View {
                         }
                     }
                 }
+
+                if zoteroService.isConfigured {
+                    Section {
+                        if let success = zoteroService.lastSyncSuccess {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text(success)
+                                    .font(.caption)
+                            }
+                        }
+                        if let error = zoteroService.lastSyncError {
+                            HStack {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .foregroundColor(.red)
+                                Text(error)
+                                    .font(.caption)
+                            }
+                        }
+                        if zoteroService.lastSyncSuccess == nil && zoteroService.lastSyncError == nil {
+                            Text("Play a podcast to sync to Zotero")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    } header: {
+                        Text("Sync Status")
+                    }
+                }
             }
             .navigationTitle("Settings")
             .onAppear {

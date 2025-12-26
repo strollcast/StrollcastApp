@@ -123,6 +123,10 @@ cp -r build/StrollcastApp.xcarchive/Products/Applications/StrollcastApp.app buil
 cd build && zip -r StrollcastApp-unsigned.ipa Payload
 ```
 
+## Acknowledgments
+
+- **Stefan Seritan** - Zotero integration idea and workflow design
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
