@@ -11,6 +11,30 @@ An iOS podcast app for browsing and playing episodes from [strollcast.com](https
 - Background audio playback with lock screen controls
 - Skip forward/backward 15 seconds
 - Progress tracking with seek slider
+- Transcript view with tap-to-seek and inline notes
+- Zotero integration to save papers to your library
+
+## Zotero Integration
+
+Link your Zotero account to save papers from podcasts to your library.
+
+### Setup
+
+1. Go to [zotero.org/settings/keys](https://www.zotero.org/settings/keys)
+2. Click **"Create new private key"** under the Applications section
+3. Give the key a name (e.g., "Strollcast")
+4. Under **Permissions**, enable:
+   - "Allow library access"
+   - "Allow write access" (to add items to your library)
+5. Click **"Save Key"** and copy the generated API key
+
+### In the App
+
+1. Open Strollcast and go to the **Settings** tab
+2. Paste your **API Key**
+3. Tap **"Save & Validate"** to verify the connection
+4. Your User ID will be automatically fetched
+5. A green checkmark indicates successful setup
 
 ## Installation
 
@@ -58,21 +82,26 @@ Download the latest unsigned IPA from [Releases](https://github.com/strollcast/S
 
 ```
 StrollcastApp/
-├── StrollcastApp.swift          # App entry point
-├── ContentView.swift            # Root view
-├── Info.plist                   # App configuration
+├── StrollcastApp.swift              # App entry point
+├── ContentView.swift                # Root tab view
+├── Info.plist                       # App configuration
 ├── Models/
-│   └── Podcast.swift            # Podcast data model
+│   └── Podcast.swift                # Podcast data model
 ├── Services/
-│   ├── PodcastService.swift     # Fetches podcasts from strollcast.com
-│   ├── DownloadManager.swift    # Downloads & caches audio files
-│   └── AudioPlayer.swift        # AVPlayer wrapper with controls
+│   ├── PodcastService.swift         # Fetches podcasts from strollcast.com
+│   ├── DownloadManager.swift        # Downloads & caches audio files
+│   ├── AudioPlayer.swift            # AVPlayer wrapper with controls
+│   ├── ListeningHistoryService.swift # Notes and playback history
+│   ├── TranscriptService.swift      # VTT transcript parsing
+│   └── ZoteroService.swift          # Zotero API integration
 ├── Views/
-│   ├── PodcastListView.swift    # Main list with mini player
-│   ├── PodcastRowView.swift     # List row with download status
-│   ├── PodcastDetailView.swift  # Episode details & actions
-│   └── PlayerView.swift         # Full-screen audio player
-└── Assets.xcassets/             # App icons and colors
+│   ├── PodcastListView.swift        # Main list with mini player
+│   ├── PodcastRowView.swift         # List row with download status
+│   ├── PodcastDetailView.swift      # Episode details, player & transcript
+│   ├── PlayedListView.swift         # Completed episodes
+│   ├── NotesListView.swift          # All notes across episodes
+│   └── SettingsView.swift           # Zotero configuration
+└── Assets.xcassets/                 # App icons and colors
 ```
 
 ## Building the IPA Locally
