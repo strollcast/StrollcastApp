@@ -7,7 +7,7 @@ class PodcastService: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private let apiURL = "https://strollcast.com/api/episodes.json"
+    private let apiURL = "https://api.strollcast.com/episodes"
 
     func fetchPodcasts() async {
         isLoading = true
@@ -21,13 +21,8 @@ class PodcastService: ObservableObject {
             let (data, _) = try await URLSession.shared.data(from: url)
             let response = try JSONDecoder().decode(EpisodesResponse.self, from: data)
             podcasts = response.episodes
-
-            if podcasts.isEmpty {
-                podcasts = Podcast.samples
-            }
         } catch {
             errorMessage = "Failed to fetch podcasts: \(error.localizedDescription)"
-            podcasts = Podcast.samples
         }
 
         isLoading = false

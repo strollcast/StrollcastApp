@@ -235,7 +235,7 @@ class ListeningHistoryService {
         authors: \(podcast.authors)
         year: \(podcast.year)
         duration: \(podcast.duration)
-        audioPath: \(podcast.audioPath)
+        audioUrl: \(podcast.audioUrl)
         paperUrl: \(podcast.paperUrl ?? "")
         ---
 
