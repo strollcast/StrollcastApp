@@ -33,8 +33,8 @@ class TranscriptService {
     }
 
     private func remoteURL(for podcast: Podcast) -> URL? {
-        // VTT is at /api/{id}.vtt
-        return URL(string: "https://strollcast.com/api/\(podcast.id).vtt")
+        // Use the transcriptUrl from the API response
+        return podcast.transcriptURL
     }
 
     func getTranscript(for podcast: Podcast) async -> [TranscriptCue]? {
