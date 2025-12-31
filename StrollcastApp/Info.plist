@@ -4,6 +4,10 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>Strollcast</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Strollcast needs microphone access to record voice notes while listening to podcasts.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Strollcast uses speech recognition for voice commands and to transcribe your voice notes.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

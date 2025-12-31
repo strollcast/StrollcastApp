@@ -90,6 +90,52 @@ class DownloadManager: NSObject, ObservableObject {
         downloadStates[podcast.id] = .notDownloaded
     }
 
+    func deleteAllDownloads() {
+        let fileManager = FileManager.default
+        guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return
+        }
+
+        do {
+            let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
+            for file in files where file.pathExtension == "m4a" {
+                try? fileManager.removeItem(at: file)
+            }
+        } catch {
+            print("Error deleting all files: \(error)")
+        }
+
+        // Reset all download states
+        for (podcastId, state) in downloadStates {
+            if case .downloaded = state {
+                downloadStates[podcastId] = .notDownloaded
+            }
+        }
+    }
+
+    var totalDownloadedSize: Int64 {
+        let fileManager = FileManager.default
+        guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return 0
+        }
+
+        var totalSize: Int64 = 0
+        do {
+            let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: [.fileSizeKey])
+            for file in files where file.pathExtension == "m4a" {
+                let attributes = try file.resourceValues(forKeys: [.fileSizeKey])
+                totalSize += Int64(attributes.fileSize ?? 0)
+            }
+        } catch {
+            print("Error calculating total size: \(error)")
+        }
+        return totalSize
+    }
+
+    var downloadedCount: Int {
+        downloadStates.values.filter { if case .downloaded = $0 { return true } else { return false } }.count
+    }
+
     private func saveFile(tempURL: URL, for podcastId: String) -> URL? {
         let fileManager = FileManager.default
         guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {

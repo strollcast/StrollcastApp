@@ -2,9 +2,11 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var zoteroService = ZoteroService.shared
+    @StateObject private var downloadManager = DownloadManager.shared
 
     @State private var apiKey: String = ""
     @State private var showingApiKey = false
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -124,8 +126,51 @@ struct SettingsView: View {
                         Text("Sync Status")
                     }
                 }
+
+                Section {
+                    HStack {
+                        Text("Downloaded Episodes")
+                        Spacer()
+                        Text("\(downloadManager.downloadedCount)")
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack {
+                        Text("Storage Used")
+                        Spacer()
+                        Text(formattedSize(downloadManager.totalDownloadedSize))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Button(role: .destructive) {
+                        showingDeleteConfirmation = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("Delete All Downloads")
+                        }
+                    }
+                    .disabled(downloadManager.downloadedCount == 0)
+                } header: {
+                    Text("Storage")
+                } footer: {
+                    Text("Downloaded episodes are stored locally for offline playback.")
+                        .font(.caption)
+                }
             }
             .navigationTitle("Settings")
+            .confirmationDialog(
+                "Delete All Downloads?",
+                isPresented: $showingDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete All", role: .destructive) {
+                    downloadManager.deleteAllDownloads()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will remove \(downloadManager.downloadedCount) downloaded episodes (\(formattedSize(downloadManager.totalDownloadedSize))). You can re-download them later.")
+            }
             .onAppear {
                 apiKey = zoteroService.apiKey
             }
@@ -143,6 +188,13 @@ struct SettingsView: View {
     private func clearCredentials() {
         zoteroService.clearCredentials()
         apiKey = ""
+    }
+
+    private func formattedSize(_ bytes: Int64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
     }
 }
 
