@@ -172,4 +172,33 @@ class TranscriptService {
         }
         return cues.isEmpty ? nil : cues.count - 1
     }
+
+    func deleteAllTranscripts() {
+        // Clear memory cache
+        cache.removeAll()
+
+        // Delete all VTT files
+        do {
+            let files = try fileManager.contentsOfDirectory(at: transcriptsFolderURL, includingPropertiesForKeys: nil)
+            for file in files where file.pathExtension == "vtt" {
+                try? fileManager.removeItem(at: file)
+            }
+        } catch {
+            print("Error deleting transcripts: \(error)")
+        }
+    }
+
+    var totalTranscriptSize: Int64 {
+        var totalSize: Int64 = 0
+        do {
+            let files = try fileManager.contentsOfDirectory(at: transcriptsFolderURL, includingPropertiesForKeys: [.fileSizeKey])
+            for file in files where file.pathExtension == "vtt" {
+                let attributes = try file.resourceValues(forKeys: [.fileSizeKey])
+                totalSize += Int64(attributes.fileSize ?? 0)
+            }
+        } catch {
+            // Folder may not exist yet
+        }
+        return totalSize
+    }
 }

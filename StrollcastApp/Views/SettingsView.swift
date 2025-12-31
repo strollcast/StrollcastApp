@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @StateObject private var zoteroService = ZoteroService.shared
     @StateObject private var downloadManager = DownloadManager.shared
+    private let transcriptService = TranscriptService.shared
 
     @State private var apiKey: String = ""
     @State private var showingApiKey = false
@@ -136,9 +137,16 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Text("Storage Used")
+                        Text("Audio Storage")
                         Spacer()
                         Text(formattedSize(downloadManager.totalDownloadedSize))
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack {
+                        Text("Transcript Storage")
+                        Spacer()
+                        Text(formattedSize(transcriptService.totalTranscriptSize))
                             .foregroundColor(.secondary)
                     }
 
@@ -150,11 +158,11 @@ struct SettingsView: View {
                             Text("Delete All Downloads")
                         }
                     }
-                    .disabled(downloadManager.downloadedCount == 0)
+                    .disabled(downloadManager.downloadedCount == 0 && transcriptService.totalTranscriptSize == 0)
                 } header: {
                     Text("Storage")
                 } footer: {
-                    Text("Downloaded episodes are stored locally for offline playback.")
+                    Text("Downloaded episodes and transcripts are stored locally for offline playback.")
                         .font(.caption)
                 }
             }
@@ -166,10 +174,11 @@ struct SettingsView: View {
             ) {
                 Button("Delete All", role: .destructive) {
                     downloadManager.deleteAllDownloads()
+                    transcriptService.deleteAllTranscripts()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("This will remove \(downloadManager.downloadedCount) downloaded episodes (\(formattedSize(downloadManager.totalDownloadedSize))). You can re-download them later.")
+                Text("This will remove \(downloadManager.downloadedCount) downloaded episodes and all cached transcripts (\(formattedSize(downloadManager.totalDownloadedSize + transcriptService.totalTranscriptSize))). You can re-download them later.")
             }
             .onAppear {
                 apiKey = zoteroService.apiKey
