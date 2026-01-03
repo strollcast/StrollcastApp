@@ -37,6 +37,13 @@ struct EpisodesResponse: Codable {
     let episodes: [Podcast]
 }
 
+struct SearchResponse: Codable {
+    let version: String
+    let query: String
+    let count: Int
+    let episodes: [Podcast]
+}
+
 #if DEBUG
 extension Podcast {
     static let samples: [Podcast] = [

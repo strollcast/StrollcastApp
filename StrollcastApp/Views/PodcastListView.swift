@@ -6,6 +6,7 @@ struct PodcastListView: View {
 
     @State private var navigationPath = NavigationPath()
     @State private var hasNavigatedToLastPodcast = false
+    @State private var searchText = ""
 
     var unplayedPodcasts: [Podcast] {
         podcastService.podcasts.filter { podcast in
@@ -55,10 +56,21 @@ struct PodcastListView: View {
             .navigationDestination(for: Podcast.self) { podcast in
                 PodcastDetailView(podcast: podcast)
             }
+            .searchable(text: $searchText, prompt: "Search episodes")
+            .onChange(of: searchText) { _, newValue in
+                Task {
+                    if newValue.isEmpty {
+                        await podcastService.fetchPodcasts()
+                    } else {
+                        await podcastService.searchPodcasts(query: newValue)
+                    }
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         Task {
+                            searchText = ""
                             await podcastService.fetchPodcasts()
                         }
                     } label: {
