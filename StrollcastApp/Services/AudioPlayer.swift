@@ -2,6 +2,7 @@ import Foundation
 import AVFoundation
 import MediaPlayer
 import SwiftUI
+import AudioToolbox
 
 // MARK: - Playback History
 
@@ -114,6 +115,8 @@ class AudioPlayer: ObservableObject {
 
     private var player: AVPlayer?
     private var timeObserver: Any?
+    private var cuedSegments: Set<String> = [] // Track segments that have been cued
+    private var lastCheckedCueIndex: Int?
 
     private init() {
         setupAudioSession()
@@ -184,6 +187,10 @@ class AudioPlayer: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        // Clear cued segments for new podcast
+        cuedSegments.removeAll()
+        lastCheckedCueIndex = nil
+
         ListeningHistoryService.shared.saveLastActivePodcast(podcast)
 
         let playerItem = AVPlayerItem(url: url)
@@ -239,6 +246,7 @@ class AudioPlayer: ObservableObject {
             Task { @MainActor in
                 self?.currentTime = time.seconds
                 self?.updateNowPlayingInfo()
+                await self?.checkForLinkCue()
             }
         }
     }
@@ -360,6 +368,68 @@ class AudioPlayer: ObservableObject {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    // MARK: - Link Cue
+
+    private func checkForLinkCue() async {
+        guard let podcast = currentPodcast else { return }
+
+        // Get transcript
+        guard let cues = await TranscriptService.shared.getTranscript(for: podcast) else {
+            return
+        }
+
+        // Find current cue index
+        guard let currentIndex = TranscriptService.shared.findCueIndex(for: currentTime, in: cues) else {
+            return
+        }
+
+        // Only process if we've moved to a new cue
+        if lastCheckedCueIndex == currentIndex {
+            return
+        }
+        lastCheckedCueIndex = currentIndex
+
+        let cue = cues[currentIndex]
+
+        // Check if this segment has a link (markdown format: [text](url))
+        guard hasLink(in: cue.text) else {
+            return
+        }
+
+        // Create unique identifier for this segment
+        let segmentId = "\(podcast.id)-\(currentIndex)"
+
+        // Check if we've already cued this segment
+        guard !cuedSegments.contains(segmentId) else {
+            return
+        }
+
+        // Calculate 2/3 point of the segment
+        let segmentDuration = cue.endTime - cue.startTime
+        let twoThirdsPoint = cue.startTime + (segmentDuration * 2.0 / 3.0)
+
+        // Check if we're at or past the 2/3 point
+        if currentTime >= twoThirdsPoint {
+            cuedSegments.insert(segmentId)
+            playLinkCue()
+        }
+    }
+
+    private func hasLink(in text: String) -> Bool {
+        // Check for markdown links: [text](url)
+        let linkPattern = "\\[([^\\]]+)\\]\\([^\\)]+\\)"
+        guard let regex = try? NSRegularExpression(pattern: linkPattern, options: []) else {
+            return false
+        }
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        return regex.firstMatch(in: text, options: [], range: range) != nil
+    }
+
+    private func playLinkCue() {
+        // Play a subtle notification sound (1407 is a gentle "Note" sound)
+        AudioServicesPlaySystemSound(1407)
     }
 }
 
