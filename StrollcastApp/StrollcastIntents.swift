@@ -81,6 +81,28 @@ struct ResumeStrollcastIntent: AppIntent {
     }
 }
 
+// MARK: - Play Previous Intent
+
+struct PlayPreviousIntent: AppIntent {
+    static var title: LocalizedStringResource = "Play Previous in Strollcast"
+    static var description = IntentDescription("Plays the previous podcast from playback history")
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        guard PlaybackHistoryService.shared.canGoBack() else {
+            return .result(dialog: "No previous podcast in history.")
+        }
+
+        let success = AudioPlayer.shared.loadPreviousFromHistory()
+
+        if success {
+            return .result(dialog: "Playing previous podcast.")
+        } else {
+            return .result(dialog: "Could not load previous podcast.")
+        }
+    }
+}
+
 // MARK: - Go to Reference Intent
 
 struct GoToReferenceIntent: AppIntent {
@@ -202,6 +224,18 @@ struct StrollcastShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Go Back",
             systemImageName: "gobackward.30"
+        )
+
+        AppShortcut(
+            intent: PlayPreviousIntent(),
+            phrases: [
+                "Play previous in \(.applicationName)",
+                "\(.applicationName) play previous",
+                "Previous podcast in \(.applicationName)",
+                "\(.applicationName) previous"
+            ],
+            shortTitle: "Play Previous",
+            systemImageName: "arrow.uturn.backward.circle"
         )
 
         AppShortcut(

@@ -3,6 +3,104 @@ import AVFoundation
 import MediaPlayer
 import SwiftUI
 
+// MARK: - Playback History
+
+struct PlaybackHistoryEntry: Codable, Equatable {
+    let podcast: Podcast
+    let position: TimeInterval
+    let timestamp: Date
+}
+
+class PlaybackHistoryService {
+    static let shared = PlaybackHistoryService()
+
+    private let maxHistorySize = 4
+    private let historyKey = "playbackHistory"
+    private var history: [PlaybackHistoryEntry] = []
+    private var currentIndex: Int = -1
+
+    private init() {
+        loadHistory()
+    }
+
+    // MARK: - History Management
+
+    func addToHistory(podcast: Podcast, position: TimeInterval) {
+        let entry = PlaybackHistoryEntry(
+            podcast: podcast,
+            position: position,
+            timestamp: Date()
+        )
+
+        // If we're navigating backward and then play a new podcast,
+        // remove all entries after current index
+        if currentIndex >= 0 && currentIndex < history.count - 1 {
+            history.removeSubrange((currentIndex + 1)...)
+        }
+
+        // Add new entry
+        history.append(entry)
+        currentIndex = history.count - 1
+
+        // Keep only last maxHistorySize entries
+        if history.count > maxHistorySize {
+            history.removeFirst(history.count - maxHistorySize)
+            currentIndex = history.count - 1
+        }
+
+        saveHistory()
+    }
+
+    func canGoBack() -> Bool {
+        return currentIndex > 0
+    }
+
+    func goBack() -> (podcast: Podcast, position: TimeInterval)? {
+        guard canGoBack() else { return nil }
+
+        currentIndex -= 1
+        let entry = history[currentIndex]
+
+        return (entry.podcast, entry.position)
+    }
+
+    func getCurrentEntry() -> PlaybackHistoryEntry? {
+        guard currentIndex >= 0 && currentIndex < history.count else {
+            return nil
+        }
+        return history[currentIndex]
+    }
+
+    func getHistory() -> [PlaybackHistoryEntry] {
+        return history
+    }
+
+    func clearHistory() {
+        history.removeAll()
+        currentIndex = -1
+        saveHistory()
+    }
+
+    // MARK: - Persistence
+
+    private func loadHistory() {
+        guard let data = UserDefaults.standard.data(forKey: historyKey),
+              let decoded = try? JSONDecoder().decode([PlaybackHistoryEntry].self, from: data) else {
+            return
+        }
+
+        history = decoded
+        currentIndex = history.count - 1
+    }
+
+    private func saveHistory() {
+        guard let encoded = try? JSONEncoder().encode(history) else { return }
+        UserDefaults.standard.set(encoded, forKey: historyKey)
+    }
+}
+
+// MARK: - Audio Player
+
 @MainActor
 class AudioPlayer: ObservableObject {
     static let shared = AudioPlayer()
@@ -74,8 +172,13 @@ class AudioPlayer: ObservableObject {
         }
     }
 
-    func load(podcast: Podcast, from url: URL) {
+    func load(podcast: Podcast, from url: URL, addToHistory: Bool = true) {
         stop()
+
+        // Add current podcast to history before switching
+        if addToHistory, let currentPodcast = currentPodcast {
+            PlaybackHistoryService.shared.addToHistory(podcast: currentPodcast, position: currentTime)
+        }
 
         currentPodcast = podcast
         isLoading = true
@@ -202,6 +305,23 @@ class AudioPlayer: ObservableObject {
         seek(to: newTime)
     }
 
+    func loadPreviousFromHistory() -> Bool {
+        guard let (podcast, position) = PlaybackHistoryService.shared.goBack() else {
+            return false
+        }
+
+        // Load the podcast without adding to history (we're navigating history)
+        load(podcast: podcast, from: podcast.audioURL, addToHistory: false)
+
+        // Seek to the saved position after a short delay to let the player initialize
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.seek(to: position)
+            self?.play()
+        }
+
+        return true
+    }
+
     func stop() {
         if let observer = timeObserver {
             player?.removeTimeObserver(observer)
@@ -224,7 +344,7 @@ class AudioPlayer: ObservableObject {
     private func updateNowPlayingInfo() {
         guard let podcast = currentPodcast else { return }
 
-        var nowPlayingInfo: [String: Any] = [
+        let nowPlayingInfo: [String: Any] = [
             MPMediaItemPropertyTitle: podcast.title,
             MPMediaItemPropertyArtist: podcast.authors,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
