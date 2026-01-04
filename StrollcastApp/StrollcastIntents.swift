@@ -81,6 +81,102 @@ struct ResumeStrollcastIntent: AppIntent {
     }
 }
 
+// MARK: - Go to Reference Intent
+
+struct GoToReferenceIntent: AppIntent {
+    static var title: LocalizedStringResource = "Go to Reference in Strollcast"
+    static var description = IntentDescription("Plays the referenced episode if there's a link in the current or previous transcript segment")
+
+    static var openAppWhenRun: Bool = true
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        guard let podcast = AudioPlayer.shared.currentPodcast else {
+            return .result(dialog: "No podcast is currently playing.")
+        }
+
+        // Get transcript
+        guard let cues = await TranscriptService.shared.getTranscript(for: podcast) else {
+            return .result(dialog: "No transcript available for this episode.")
+        }
+
+        // Find current cue
+        let currentTime = AudioPlayer.shared.currentTime
+        guard let currentIndex = TranscriptService.shared.findCueIndex(for: currentTime, in: cues) else {
+            return .result(dialog: "Could not find current position in transcript.")
+        }
+
+        // Check current and previous cues for mp3 links
+        let cuesToCheck = [currentIndex, max(0, currentIndex - 1)]
+
+        for index in cuesToCheck {
+            guard index < cues.count else { continue }
+            let cue = cues[index]
+
+            // Look for mp3 links in markdown format: [text](url.mp3)
+            if let mp3URL = extractMP3Link(from: cue.text) {
+                // Found an mp3 link, try to play it
+                // Extract episode ID from URL
+                // Expected format: https://released.strollcast.com/episodes/{episode_id}/{episode_id}.mp3
+                let pathComponents = mp3URL.pathComponents
+                guard pathComponents.count >= 3,
+                      pathComponents[pathComponents.count - 3] == "episodes" else {
+                    return .result(dialog: "Invalid reference URL format.")
+                }
+
+                let episodeId = pathComponents[pathComponents.count - 2]
+
+                // Fetch the episode from the API
+                if let episode = await fetchEpisode(id: episodeId) {
+                    // Load and play the referenced episode
+                    AudioPlayer.shared.load(podcast: episode, from: episode.audioURL)
+                    AudioPlayer.shared.play()
+                    return .result(dialog: "Now playing \(episode.title).")
+                } else {
+                    return .result(dialog: "Referenced episode not found.")
+                }
+            }
+        }
+
+        return .result(dialog: "No reference found in the current or previous segment.")
+    }
+
+    private func extractMP3Link(from text: String) -> URL? {
+        // Regex pattern to match [text](url.mp3) or [text](url.m4a)
+        let pattern = "\\[([^\\]]+)\\]\\((https?://[^\\)]+\\.(mp3|m4a))\\)"
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return nil
+        }
+
+        let nsString = text as NSString
+        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsString.length))
+
+        if let match = matches.first, match.numberOfRanges >= 3 {
+            let urlRange = match.range(at: 2)
+            let urlString = nsString.substring(with: urlRange)
+            return URL(string: urlString)
+        }
+
+        return nil
+    }
+
+    private func fetchEpisode(id: String) async -> Podcast? {
+        guard let url = URL(string: "https://api.strollcast.com/episodes") else {
+            return nil
+        }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(EpisodesResponse.self, from: data)
+            return response.episodes.first(where: { $0.id == id })
+        } catch {
+            print("Error fetching episode \(id): \(error)")
+            return nil
+        }
+    }
+}
+
 // MARK: - App Shortcuts Provider
 
 struct StrollcastShortcuts: AppShortcutsProvider {
@@ -128,6 +224,18 @@ struct StrollcastShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Resume",
             systemImageName: "play.circle"
+        )
+
+        AppShortcut(
+            intent: GoToReferenceIntent(),
+            phrases: [
+                "Go to reference in \(.applicationName)",
+                "\(.applicationName) go to reference",
+                "Play reference in \(.applicationName)",
+                "\(.applicationName) play reference"
+            ],
+            shortTitle: "Go to Reference",
+            systemImageName: "link.circle"
         )
     }
 }
