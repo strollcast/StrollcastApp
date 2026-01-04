@@ -151,7 +151,13 @@ struct GoToReferenceIntent: AppIntent {
                 // Fetch the episode from the API
                 if let episode = await fetchEpisode(id: episodeId) {
                     // Load and play the referenced episode
-                    AudioPlayer.shared.load(podcast: episode, from: episode.audioURL)
+                    // Check if downloaded locally first, like the main app does
+                    let downloadState = DownloadManager.shared.downloadState(for: episode)
+                    if case .downloaded(let url) = downloadState {
+                        AudioPlayer.shared.load(podcast: episode, from: url)
+                    } else {
+                        AudioPlayer.shared.load(podcast: episode, from: episode.audioURL)
+                    }
                     AudioPlayer.shared.play()
                     return .result(dialog: "Now playing \(episode.title).")
                 } else {
