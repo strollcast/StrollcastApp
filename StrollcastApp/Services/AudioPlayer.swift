@@ -117,10 +117,12 @@ class AudioPlayer: ObservableObject {
     private var timeObserver: Any?
     private var cuedSegments: Set<String> = [] // Track segments that have been cued
     private var lastCheckedCueIndex: Int?
+    private var wasPlayingBeforeInterruption = false
 
     private init() {
         setupAudioSession()
         setupRemoteCommands()
+        setupInterruptionHandling()
     }
 
     private func setupAudioSession() {
@@ -172,6 +174,48 @@ class AudioPlayer: ObservableObject {
                 }
             }
             return .success
+        }
+    }
+
+    private func setupInterruptionHandling() {
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor in
+                guard let self = self,
+                      let userInfo = notification.userInfo,
+                      let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+                      let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+                    return
+                }
+
+                switch type {
+                case .began:
+                    // Audio session was interrupted (phone call, Siri, etc.)
+                    self.wasPlayingBeforeInterruption = self.isPlaying
+                    if self.isPlaying {
+                        self.pause()
+                    }
+
+                case .ended:
+                    // Interruption ended, resume if we were playing
+                    guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else {
+                        return
+                    }
+                    let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+
+                    if options.contains(.shouldResume) && self.wasPlayingBeforeInterruption {
+                        // Resume playback
+                        self.play()
+                    }
+                    self.wasPlayingBeforeInterruption = false
+
+                @unknown default:
+                    break
+                }
+            }
         }
     }
 
