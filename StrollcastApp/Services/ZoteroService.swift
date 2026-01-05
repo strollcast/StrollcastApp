@@ -152,13 +152,11 @@ class ZoteroService: ObservableObject {
     }
 
     func addPodcastToZotero(_ podcast: Podcast) async -> Bool {
-        print("Zotero: addPodcastToZotero called for \(podcast.id)")
-        print("Zotero: isConfigured=\(isConfigured), userId=\(userId), hasApiKey=\(!apiKey.isEmpty)")
 
         guard isConfigured else {
-            print("Zotero: Not configured, skipping")
             return false
         }
+        print("Zotero: addPodcastToZotero called for \(podcast.id)")
 
         // Check if already added
         if let existingKey = zoteroItemKey(for: podcast.id) {

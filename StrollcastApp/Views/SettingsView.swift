@@ -175,10 +175,11 @@ struct SettingsView: View {
                 Button("Delete All", role: .destructive) {
                     downloadManager.deleteAllDownloads()
                     transcriptService.deleteAllTranscripts()
+                    PlaybackHistoryService.shared.clearHistory()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("This will remove \(downloadManager.downloadedCount) downloaded episodes and all cached transcripts (\(formattedSize(downloadManager.totalDownloadedSize + transcriptService.totalTranscriptSize))). You can re-download them later.")
+                Text("This will remove \(downloadManager.downloadedCount) downloaded episodes, all cached transcripts, and playback history (\(formattedSize(downloadManager.totalDownloadedSize + transcriptService.totalTranscriptSize))). You can re-download them later.")
             }
             .onAppear {
                 apiKey = zoteroService.apiKey
