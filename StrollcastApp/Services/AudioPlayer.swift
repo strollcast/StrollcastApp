@@ -438,7 +438,12 @@ class AudioPlayer: ObservableObject {
         let cue = cues[currentIndex]
 
         // Check if this segment has a link (markdown format: [text](url))
-        guard hasLink(in: cue.text) else {
+        let linkFound = hasLink(in: cue.text)
+        if linkFound {
+            print("🔗 Link detected in segment \(currentIndex): \(cue.text.prefix(100))")
+        }
+
+        guard linkFound else {
             return
         }
 
@@ -447,12 +452,15 @@ class AudioPlayer: ObservableObject {
 
         // Check if we've already cued this segment
         guard !cuedSegments.contains(segmentId) else {
+            print("🔗 Segment \(currentIndex) already cued, skipping")
             return
         }
 
         // Calculate 2/3 point of the segment
         let segmentDuration = cue.endTime - cue.startTime
         let twoThirdsPoint = cue.startTime + (segmentDuration * 2.0 / 3.0)
+
+        print("🔗 Segment \(currentIndex): duration=\(segmentDuration)s, 2/3 point=\(twoThirdsPoint)s, current=\(currentTime)s")
 
         // Check if we're at or past the 2/3 point
         if currentTime >= twoThirdsPoint {
@@ -472,8 +480,13 @@ class AudioPlayer: ObservableObject {
     }
 
     private func playLinkCue() {
-        // Play a subtle notification sound (1407 is a gentle "Note" sound)
-        AudioServicesPlaySystemSound(1407)
+        // Play a notification sound
+        // 1057 = "Tock" sound (more audible)
+        // Also vibrate if available
+        AudioServicesPlaySystemSound(1057)
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+
+        print("🔗 Link cue played at \(currentTime)")
     }
 }
 
