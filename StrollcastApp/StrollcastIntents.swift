@@ -272,7 +272,11 @@ struct StrollcastShortcuts: AppShortcutsProvider {
                 "Go to reference in \(.applicationName)",
                 "\(.applicationName) go to reference",
                 "Play reference in \(.applicationName)",
-                "\(.applicationName) play reference"
+                "\(.applicationName) play reference",
+                "Go to link in \(.applicationName)",
+                "\(.applicationName) go to link",
+                "Play link in \(.applicationName)",
+                "\(.applicationName) play link"
             ],
             shortTitle: "Go to Reference",
             systemImageName: "link.circle"

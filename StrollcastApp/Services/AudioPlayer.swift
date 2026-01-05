@@ -27,21 +27,56 @@ class PlaybackHistoryService {
     // MARK: - History Management
 
     func addToHistory(podcast: Podcast, position: TimeInterval) {
-        let entry = PlaybackHistoryEntry(
-            podcast: podcast,
-            position: position,
-            timestamp: Date()
-        )
+        print("📚 addToHistory - Adding: \(podcast.title) [id:\(podcast.id)] @ \(Int(position))s (currentIndex before: \(currentIndex))")
 
-        // If we're navigating backward and then play a new podcast,
-        // remove all entries after current index
-        if currentIndex >= 0 && currentIndex < history.count - 1 {
-            history.removeSubrange((currentIndex + 1)...)
+        // Check if this is the same podcast as the entry at currentIndex
+        // If so, just update the position - don't modify history structure
+        if currentIndex >= 0 && currentIndex < history.count {
+            let currentEntry = history[currentIndex]
+            print("📚 addToHistory - Comparing with history[\(currentIndex)]: \(currentEntry.podcast.title) [id:\(currentEntry.podcast.id)]")
+            print("📚 addToHistory - IDs match: \(currentEntry.podcast.id == podcast.id)")
+
+            if currentEntry.podcast.id == podcast.id {
+                print("📚 addToHistory - Updating position for current entry at index \(currentIndex)")
+                history[currentIndex] = PlaybackHistoryEntry(
+                    podcast: podcast,
+                    position: position,
+                    timestamp: Date()
+                )
+            } else {
+                // We're switching to a different podcast
+                // If we're in the middle of history (navigated back), remove future entries
+                if currentIndex < history.count - 1 {
+                    print("📚 addToHistory - Removing future entries from \(currentIndex + 1)")
+                    history.removeSubrange((currentIndex + 1)...)
+                }
+
+                // Add new entry
+                let entry = PlaybackHistoryEntry(
+                    podcast: podcast,
+                    position: position,
+                    timestamp: Date()
+                )
+                history.append(entry)
+                currentIndex = history.count - 1
+                print("📚 addToHistory - Added new entry at index \(currentIndex)")
+            }
+        } else {
+            // History is empty or currentIndex is invalid, just add
+            let entry = PlaybackHistoryEntry(
+                podcast: podcast,
+                position: position,
+                timestamp: Date()
+            )
+            history.append(entry)
+            currentIndex = history.count - 1
+            print("📚 addToHistory - Added first entry at index \(currentIndex)")
         }
 
-        // Add new entry
-        history.append(entry)
-        currentIndex = history.count - 1
+        print("📚 addToHistory - After: count=\(history.count), currentIndex=\(currentIndex)")
+        for (idx, histEntry) in history.enumerated() {
+            print("  [\(idx)] \(histEntry.podcast.title)")
+        }
 
         // Keep only last maxHistorySize entries
         if history.count > maxHistorySize {
@@ -59,8 +94,11 @@ class PlaybackHistoryService {
     func goBack() -> (podcast: Podcast, position: TimeInterval)? {
         guard canGoBack() else { return nil }
 
+        print("📚 goBack - Before: currentIndex=\(currentIndex)")
         currentIndex -= 1
         let entry = history[currentIndex]
+        print("📚 goBack - After: currentIndex=\(currentIndex), podcast=\(entry.podcast.title)")
+        saveHistory() // Save the updated currentIndex
 
         return (entry.podcast, entry.position)
     }
@@ -70,6 +108,20 @@ class PlaybackHistoryService {
             return nil
         }
         return history[currentIndex]
+    }
+
+    // Set current index without adding to history (for when resuming/loading from history)
+    func setCurrentPodcast(_ podcast: Podcast) {
+        // Find the index of this podcast in history
+        for (index, entry) in history.enumerated() {
+            if entry.podcast.id == podcast.id {
+                currentIndex = index
+                print("📚 setCurrentPodcast - Set currentIndex to \(currentIndex) for \(podcast.title)")
+                saveHistory()
+                return
+            }
+        }
+        print("📚 setCurrentPodcast - Podcast not found in history: \(podcast.title)")
     }
 
     func getHistory() -> [PlaybackHistoryEntry] {
@@ -220,14 +272,25 @@ class AudioPlayer: ObservableObject {
     }
 
     func load(podcast: Podcast, from url: URL, addToHistory: Bool = true) {
+        print("📚 load() - Called with: \(podcast.title), addToHistory=\(addToHistory)")
+
+        // Save current podcast and time BEFORE stop() clears them
+        let previousPodcast = currentPodcast
+        let previousTime = currentTime
+
+        if let prev = previousPodcast {
+            print("📚 load() - Previous was: \(prev.title) @ \(Int(previousTime))s")
+        }
+
         stop()
 
-        // Add current podcast to history before switching
-        if addToHistory, let currentPodcast = currentPodcast {
-            PlaybackHistoryService.shared.addToHistory(podcast: currentPodcast, position: currentTime)
+        // Add previous podcast to history
+        if addToHistory, let previousPodcast = previousPodcast {
+            PlaybackHistoryService.shared.addToHistory(podcast: previousPodcast, position: previousTime)
         }
 
         currentPodcast = podcast
+        print("📚 load() - Now loading: \(podcast.title)")
         isLoading = true
         errorMessage = nil
 
@@ -359,16 +422,33 @@ class AudioPlayer: ObservableObject {
 
     func loadPreviousFromHistory() -> Bool {
         guard let (podcast, position) = PlaybackHistoryService.shared.goBack() else {
+            print("📚 loadPreviousFromHistory - No previous podcast available")
             return false
         }
 
+        print("📚 loadPreviousFromHistory - Going to: \(podcast.title) @ \(Int(position))s")
+
+        // Check if podcast is downloaded locally, like GoToReferenceIntent does
+        let downloadState = DownloadManager.shared.downloadState(for: podcast)
+        let url: URL
+        if case .downloaded(let localURL) = downloadState {
+            url = localURL
+            print("📚 Using downloaded file")
+        } else {
+            url = podcast.audioURL
+            print("📚 Using remote URL")
+        }
+
         // Load the podcast without adding to history (we're navigating history)
-        load(podcast: podcast, from: podcast.audioURL, addToHistory: false)
+        load(podcast: podcast, from: url, addToHistory: false)
 
         // Seek to the saved position after a short delay to let the player initialize
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.seek(to: position)
-            self?.play()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            print("📚 loadPreviousFromHistory - Delayed block executing: seeking to \(Int(position))s and playing")
+            self.seek(to: position)
+            self.play()
+            print("📚 loadPreviousFromHistory - isPlaying=\(self.isPlaying), currentTime=\(self.currentTime)")
         }
 
         return true
