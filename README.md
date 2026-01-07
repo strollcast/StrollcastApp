@@ -1,6 +1,6 @@
 # Strollcast
 
-An iOS podcast app for browsing and playing episodes from [strollcast.com](https://strollcast.com) - AI-generated audio summaries of machine learning research papers.
+A native  app for browsing and playing episodes from [strollcast.com](https://strollcast.com) - AI-generated audio summaries of machine learning research papers.
 
 ![App Icon](StrollcastApp/Assets.xcassets/AppIcon.appiconset/AppIcon.png)
 
@@ -28,7 +28,7 @@ Link your Zotero account to save papers from podcasts to your library.
    - "Allow write access" (to add items to your library)
 5. Click **"Save Key"** and copy the generated API key
 
-### In the App
+### In the ios App
 
 1. Open Strollcast and go to the **Settings** tab
 2. Paste your **API Key**
@@ -36,7 +36,7 @@ Link your Zotero account to save papers from podcasts to your library.
 4. Your User ID will be automatically fetched
 5. A green checkmark indicates successful setup
 
-## Installation
+## iOS Installation
 
 ### Option 1: Build from Source (Recommended)
 
@@ -48,7 +48,7 @@ Link your Zotero account to save papers from podcasts to your library.
 1. Clone the repository:
    ```bash
    git clone git@github.com:strollcast/StrollcastApp.git
-   cd StrollcastApp
+   cd ios/StrollcastApp
    ```
 
 2. Open in Xcode:
@@ -110,6 +110,9 @@ To create an unsigned IPA for distribution:
 
 ```bash
 # Build the archive
+
+cd ios
+
 xcodebuild archive \
   -project StrollcastApp.xcodeproj \
   -scheme StrollcastApp \
