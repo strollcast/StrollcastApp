@@ -1,0 +1,71 @@
+# Gradle files
+.gradle/
+build/
+gradle.properties
+
+# Local configuration file
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+.DS_Store
+
+# Built application files
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+release/
+
+# Log Files
+*.log
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+captures/
+
+# IntelliJ
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/modules.xml
+.idea/misc.xml
+
+# External native build folder
+.externalNativeBuild
+.cxx/
+
+# Version control
+.svn/
+.hg/
+.git/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services
+google-services.json
+
+# Android Profiling
+*.hprof

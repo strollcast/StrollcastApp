@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Strollcast" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Use Material3 colors -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>
