@@ -31,7 +31,6 @@ class PodcastRepository @Inject constructor(
     suspend fun refreshPodcasts(): Result<Unit> {
         return try {
             val response = api.getEpisodes()
-            Log.d(TAG, "Received ${response.episodes.size} episodes from API")
             podcastDao.insertAll(response.episodes)
             Result.success(Unit)
         } catch (e: Exception) {
