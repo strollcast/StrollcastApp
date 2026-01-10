@@ -50,13 +50,13 @@ fun PlayerScreen(
             ) {
                 if (uiState.currentPodcast != null) {
                     Text(
-                        text = uiState.currentPodcast!!.title,
+                        text = uiState.currentPodcast!!.title ?: "Untitled",
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = uiState.currentPodcast!!.authors,
+                        text = uiState.currentPodcast!!.authors ?: "Unknown",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -10,32 +10,32 @@ data class Podcast(
     @PrimaryKey
     val id: String,
 
-    val title: String,
+    val title: String?,
 
-    val authors: String,
+    val authors: String?,
 
-    val year: Int,
+    val year: Int?,
 
-    val duration: String,
+    val duration: String?,
 
     @SerializedName("duration_seconds")
-    val durationSeconds: Int,
+    val durationSeconds: Int?,
 
-    val description: String,
+    val description: String?,
 
     @SerializedName("audio_url")
-    val audioUrl: String,
+    val audioUrl: String?,
 
     @SerializedName("transcript_url")
-    val transcriptUrl: String,
+    val transcriptUrl: String?,
 
     @SerializedName("paper_url")
-    val paperUrl: String,
+    val paperUrl: String?,
 
-    val published: Boolean,
+    val published: Boolean?,
 
     @SerializedName("created_at")
-    val createdAt: Date
+    val createdAt: Date?
 )
 
 data class EpisodesResponse(

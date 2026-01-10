@@ -1,5 +1,6 @@
 package com.strollcast.app.repository
 
+import android.util.Log
 import com.strollcast.app.data.PodcastDao
 import com.strollcast.app.data.PlaybackHistoryDao
 import com.strollcast.app.data.DownloadDao
@@ -20,15 +21,21 @@ class PodcastRepository @Inject constructor(
     private val historyDao: PlaybackHistoryDao,
     private val downloadDao: DownloadDao
 ) {
+    companion object {
+        private const val TAG = "PodcastRepository"
+    }
+
     // Podcasts
     val podcasts: Flow<List<Podcast>> = podcastDao.getAllPodcasts()
 
     suspend fun refreshPodcasts(): Result<Unit> {
         return try {
             val response = api.getEpisodes()
+            Log.d(TAG, "Received ${response.episodes.size} episodes from API")
             podcastDao.insertAll(response.episodes)
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error refreshing podcasts", e)
             Result.failure(e)
         }
     }
@@ -41,16 +48,21 @@ class PodcastRepository @Inject constructor(
     val playbackHistory: Flow<List<PlaybackHistoryEntry>> = historyDao.getHistory()
 
     suspend fun savePlaybackPosition(podcastId: String, position: Long) {
-        historyDao.insert(
-            PlaybackHistoryEntry(
-                podcastId = podcastId,
-                position = position,
-                timestamp = Date()
+        try {
+            historyDao.insert(
+                PlaybackHistoryEntry(
+                    podcastId = podcastId,
+                    position = position,
+                    timestamp = Date()
+                )
             )
-        )
-        // Keep only last 30 days of history
-        val cutoffTime = System.currentTimeMillis() - (30 * 24 * 60 * 60 * 1000L)
-        historyDao.deleteOlderThan(cutoffTime)
+            // Keep only last 30 days of history
+            val cutoffTime = System.currentTimeMillis() - (30 * 24 * 60 * 60 * 1000L)
+            historyDao.deleteOlderThan(cutoffTime)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving playback position for $podcastId", e)
+            throw e
+        }
     }
 
     suspend fun getLastPosition(podcastId: String): Long? {

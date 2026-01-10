@@ -1,5 +1,6 @@
 package com.strollcast.app.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.strollcast.app.models.Podcast
@@ -23,6 +24,10 @@ class PodcastViewModel @Inject constructor(
     private val repository: PodcastRepository
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "PodcastViewModel"
+    }
+
     private val _uiState = MutableStateFlow(PodcastUiState(isLoading = true))
     val uiState: StateFlow<PodcastUiState> = _uiState.asStateFlow()
 
@@ -35,6 +40,7 @@ class PodcastViewModel @Inject constructor(
         viewModelScope.launch {
             repository.podcasts
                 .catch { e ->
+                    Log.e(TAG, "Error loading podcasts from database", e)
                     _uiState.value = _uiState.value.copy(
                         errorMessage = e.message,
                         isLoading = false
@@ -54,6 +60,7 @@ class PodcastViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
             val result = repository.refreshPodcasts()
             result.onFailure { e ->
+                Log.e(TAG, "Failed to refresh podcasts", e)
                 _uiState.value = _uiState.value.copy(
                     errorMessage = e.message,
                     isLoading = false

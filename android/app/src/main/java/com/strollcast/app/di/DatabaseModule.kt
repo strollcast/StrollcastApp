@@ -1,6 +1,7 @@
 package com.strollcast.app.di
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 import com.strollcast.app.data.StrollcastDatabase
 import com.strollcast.app.data.PodcastDao
@@ -16,6 +17,8 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
+    private const val TAG = "DatabaseModule"
 
     @Provides
     @Singleton

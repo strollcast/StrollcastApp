@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PodcastDao {
-    @Query("SELECT * FROM podcasts WHERE published = 1 ORDER BY createdAt DESC")
+    @Query("SELECT * FROM podcasts WHERE published IS NULL OR published = 1 ORDER BY createdAt DESC")
     fun getAllPodcasts(): Flow<List<Podcast>>
 
     @Query("SELECT * FROM podcasts WHERE id = :id")
