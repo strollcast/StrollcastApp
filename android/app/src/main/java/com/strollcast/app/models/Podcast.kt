@@ -18,23 +18,18 @@ data class Podcast(
 
     val duration: String?,
 
-    @SerializedName("duration_seconds")
     val durationSeconds: Int?,
 
     val description: String?,
 
-    @SerializedName("audio_url")
     val audioUrl: String?,
 
-    @SerializedName("transcript_url")
     val transcriptUrl: String?,
 
-    @SerializedName("paper_url")
     val paperUrl: String?,
 
     val published: Boolean?,
 
-    @SerializedName("created_at")
     val createdAt: Date?
 )
 

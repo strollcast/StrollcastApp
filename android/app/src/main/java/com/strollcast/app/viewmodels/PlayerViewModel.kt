@@ -57,6 +57,7 @@ class PlayerViewModel @Inject constructor(
             Log.d(TAG, "Loading podcast with ID: $podcastId")
             val podcast = repository.getPodcastById(podcastId)
             if (podcast != null) {
+                Log.d(TAG, "Found podcast: title=${podcast.title}, audioUrl=${podcast.audioUrl}")
                 loadPodcast(podcast)
             } else {
                 Log.e(TAG, "Podcast not found with ID: $podcastId")
