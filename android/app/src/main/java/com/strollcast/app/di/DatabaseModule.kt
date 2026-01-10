@@ -24,7 +24,9 @@ object DatabaseModule {
             context,
             StrollcastDatabase::class.java,
             "strollcast_database"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides

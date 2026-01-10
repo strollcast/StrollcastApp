@@ -14,8 +14,6 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val zoteroApiKey: String = "",
-    val zoteroUserId: String = "",
-    val zoteroCollectionKey: String = "",
     val downloadedCount: Int = 0,
     val totalDownloadedSize: Long = 0L,
     val totalTranscriptSize: Long = 0L
@@ -39,9 +37,7 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadSettings() {
         _uiState.value = _uiState.value.copy(
-            zoteroApiKey = prefs.getString("zotero_api_key", "") ?: "",
-            zoteroUserId = prefs.getString("zotero_user_id", "") ?: "",
-            zoteroCollectionKey = prefs.getString("zotero_collection_key", "") ?: ""
+            zoteroApiKey = prefs.getString("zotero_api_key", "") ?: ""
         )
     }
 
@@ -71,16 +67,6 @@ class SettingsViewModel @Inject constructor(
     fun updateZoteroApiKey(key: String) {
         _uiState.value = _uiState.value.copy(zoteroApiKey = key)
         prefs.edit().putString("zotero_api_key", key).apply()
-    }
-
-    fun updateZoteroUserId(userId: String) {
-        _uiState.value = _uiState.value.copy(zoteroUserId = userId)
-        prefs.edit().putString("zotero_user_id", userId).apply()
-    }
-
-    fun updateZoteroCollectionKey(key: String) {
-        _uiState.value = _uiState.value.copy(zoteroCollectionKey = key)
-        prefs.edit().putString("zotero_collection_key", key).apply()
     }
 
     fun deleteAllDownloads() {

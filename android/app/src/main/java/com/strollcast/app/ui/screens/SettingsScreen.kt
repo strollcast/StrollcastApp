@@ -53,24 +53,8 @@ fun SettingsScreen(
                 singleLine = true
             )
 
-            OutlinedTextField(
-                value = uiState.zoteroUserId,
-                onValueChange = { viewModel.updateZoteroUserId(it) },
-                label = { Text("Zotero User ID") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                value = uiState.zoteroCollectionKey,
-                onValueChange = { viewModel.updateZoteroCollectionKey(it) },
-                label = { Text("Zotero Collection Key (optional)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
             Text(
-                text = "Configure Zotero integration to automatically add papers to your library",
+                text = "Enter your Zotero API key to automatically add papers to your library",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

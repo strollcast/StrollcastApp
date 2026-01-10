@@ -67,7 +67,7 @@ app/src/main/java/com/strollcast/app/
 
 - Android Studio Hedgehog (2023.1.1) or later
 - JDK 17 or later
-- Android SDK 34
+- Android SDK 36
 - Minimum SDK 26 (Android 8.0)
 
 ### Build Steps
@@ -122,7 +122,7 @@ Single source of truth for data operations:
 
 The app fetches episodes from:
 ```
-https://strollcast.com/api/episodes.json
+https://api.strollcast.com/episodes
 ```
 
 ## Zotero Integration

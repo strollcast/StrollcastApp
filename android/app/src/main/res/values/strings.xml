@@ -25,9 +25,7 @@
     <string name="settings">Settings</string>
     <string name="zotero_integration">Zotero Integration</string>
     <string name="zotero_api_key">Zotero API Key</string>
-    <string name="zotero_user_id">Zotero User ID</string>
-    <string name="zotero_collection_key">Zotero Collection Key (optional)</string>
-    <string name="zotero_description">Configure Zotero integration to automatically add papers to your library</string>
+    <string name="zotero_description">Enter your Zotero API key to automatically add papers to your library</string>
 
     <string name="storage">Storage</string>
     <string name="downloaded_episodes">Downloaded Episodes</string>

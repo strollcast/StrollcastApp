@@ -42,30 +42,6 @@ data class EpisodesResponse(
     val episodes: List<Podcast>
 )
 
-@Entity(tableName = "playback_history")
-data class PlaybackHistoryEntry(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-
-    val podcastId: String,
-
-    val position: Long, // in milliseconds
-
-    val timestamp: Date
-)
-
-@Entity(tableName = "downloaded_episodes")
-data class DownloadedEpisode(
-    @PrimaryKey
-    val episodeId: String,
-
-    val localAudioPath: String,
-
-    val localTranscriptPath: String?,
-
-    val downloadedAt: Date
-)
-
 data class TranscriptCue(
     val startTime: Long, // milliseconds
     val endTime: Long,   // milliseconds

@@ -1,12 +1,14 @@
 package com.strollcast.app.data
 
 import androidx.room.*
+import com.strollcast.app.models.DownloadedEpisode
+import com.strollcast.app.models.PlaybackHistoryEntry
 import com.strollcast.app.models.Podcast
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PodcastDao {
-    @Query("SELECT * FROM podcasts WHERE published = 1 ORDER BY created_at DESC")
+    @Query("SELECT * FROM podcasts WHERE published = 1 ORDER BY createdAt DESC")
     fun getAllPodcasts(): Flow<List<Podcast>>
 
     @Query("SELECT * FROM podcasts WHERE id = :id")

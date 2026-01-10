@@ -13,7 +13,7 @@ import com.strollcast.app.models.PlaybackHistoryEntry
         PlaybackHistoryEntry::class,
         DownloadedEpisode::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
