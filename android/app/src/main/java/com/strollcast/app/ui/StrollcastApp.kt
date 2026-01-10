@@ -20,7 +20,9 @@ import com.strollcast.app.ui.screens.SettingsScreen
 
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Podcasts : Screen("podcasts", "Podcasts", Icons.Filled.Home)
-    object Player : Screen("player", "Player", Icons.Filled.PlayCircle)
+    object Player : Screen("player", "Player", Icons.Filled.PlayCircle) {
+        fun createRoute(podcastId: String) = "player/$podcastId"
+    }
     object Settings : Screen("settings", "Settings", Icons.Filled.Settings)
 }
 
@@ -63,13 +65,14 @@ fun StrollcastApp() {
             composable(Screen.Podcasts.route) {
                 PodcastListScreen(
                     onPodcastClick = { podcast ->
-                        // Handle podcast click - navigate to player
-                        navController.navigate(Screen.Player.route)
+                        // Navigate to player with podcast ID
+                        navController.navigate(Screen.Player.createRoute(podcast.id))
                     }
                 )
             }
-            composable(Screen.Player.route) {
-                PlayerScreen()
+            composable("${Screen.Player.route}/{podcastId}") { backStackEntry ->
+                val podcastId = backStackEntry.arguments?.getString("podcastId")
+                PlayerScreen(podcastId = podcastId)
             }
             composable(Screen.Settings.route) {
                 SettingsScreen()

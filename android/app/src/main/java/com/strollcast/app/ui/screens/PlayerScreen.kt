@@ -7,18 +7,51 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.exoplayer.ExoPlayer
 import com.strollcast.app.viewmodels.PlayerViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
+    podcastId: String? = null,
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+
+    // Create and set up ExoPlayer
+    DisposableEffect(Unit) {
+        val player = ExoPlayer.Builder(context)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
+                    .setUsage(C.USAGE_MEDIA)
+                    .build(),
+                true
+            )
+            .setHandleAudioBecomingNoisy(true)
+            .build()
+
+        viewModel.setPlayer(player)
+
+        onDispose {
+            player.release()
+        }
+    }
+
+    // Load podcast when screen opens with podcast ID
+    LaunchedEffect(podcastId) {
+        if (podcastId != null) {
+            viewModel.loadPodcastById(podcastId)
+        }
+    }
 
     LaunchedEffect(Unit) {
         while (true) {

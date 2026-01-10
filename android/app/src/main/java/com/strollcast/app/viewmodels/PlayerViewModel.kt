@@ -1,5 +1,6 @@
 package com.strollcast.app.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -25,6 +26,10 @@ class PlayerViewModel @Inject constructor(
     private val repository: PodcastRepository
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "PlayerViewModel"
+    }
+
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
@@ -47,10 +52,28 @@ class PlayerViewModel @Inject constructor(
         })
     }
 
+    fun loadPodcastById(podcastId: String) {
+        viewModelScope.launch {
+            Log.d(TAG, "Loading podcast with ID: $podcastId")
+            val podcast = repository.getPodcastById(podcastId)
+            if (podcast != null) {
+                loadPodcast(podcast)
+            } else {
+                Log.e(TAG, "Podcast not found with ID: $podcastId")
+            }
+        }
+    }
+
     fun loadPodcast(podcast: Podcast) {
         viewModelScope.launch {
+            Log.d(TAG, "Loading podcast: ${podcast.title}")
             val download = repository.getDownload(podcast.id)
             val mediaUri = download?.localAudioPath ?: podcast.audioUrl
+
+            if (mediaUri == null) {
+                Log.e(TAG, "No audio URL available for podcast: ${podcast.id}")
+                return@launch
+            }
 
             val mediaItem = MediaItem.Builder()
                 .setUri(mediaUri)
