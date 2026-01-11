@@ -25,4 +25,7 @@ interface TranscriptDao {
 
     @Query("SELECT * FROM transcript_lines WHERE transcript_id = :transcriptId AND start_ms <= :positionMs AND end_ms > :positionMs LIMIT 1")
     suspend fun getCurrentLine(transcriptId: String, positionMs: Long): TranscriptLineEntity?
+
+    @Query("SELECT * FROM transcript_lines WHERE transcript_id = :transcriptId AND line_number = :lineNumber LIMIT 1")
+    suspend fun getTranscriptLineByNumber(transcriptId: String, lineNumber: Int): TranscriptLineEntity?
 }

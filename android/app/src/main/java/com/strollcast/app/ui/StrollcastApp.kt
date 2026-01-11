@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.StickyNote2
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.strollcast.app.ui.screens.NotesScreen
 import com.strollcast.app.ui.screens.PodcastListScreen
 import com.strollcast.app.ui.screens.PlayerScreen
 import com.strollcast.app.ui.screens.SettingsScreen
@@ -23,6 +25,9 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
     object Player : Screen("player", "Player", Icons.Filled.PlayCircle) {
         fun createRoute(podcastId: String) = "player/$podcastId"
     }
+    object Notes : Screen("notes", "Notes", Icons.Filled.StickyNote2) {
+        fun createRoute(episodeId: String? = null) = if (episodeId != null) "notes/$episodeId" else "notes"
+    }
     object Settings : Screen("settings", "Settings", Icons.Filled.Settings)
 }
 
@@ -30,7 +35,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
 @Composable
 fun StrollcastApp() {
     val navController = rememberNavController()
-    val items = listOf(Screen.Podcasts, Screen.Player, Screen.Settings)
+    val items = listOf(Screen.Podcasts, Screen.Player, Screen.Notes, Screen.Settings)
 
     Scaffold(
         bottomBar = {
@@ -73,6 +78,13 @@ fun StrollcastApp() {
             composable("${Screen.Player.route}/{podcastId}") { backStackEntry ->
                 val podcastId = backStackEntry.arguments?.getString("podcastId")
                 PlayerScreen(podcastId = podcastId)
+            }
+            composable(Screen.Notes.route) {
+                NotesScreen()
+            }
+            composable("${Screen.Notes.route}/{episodeId}") { backStackEntry ->
+                val episodeId = backStackEntry.arguments?.getString("episodeId")
+                NotesScreen(episodeId = episodeId)
             }
             composable(Screen.Settings.route) {
                 SettingsScreen()
