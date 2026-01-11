@@ -114,22 +114,6 @@ class PlaybackService : MediaSessionService() {
             }
             return super.onCustomCommand(session, controller, customCommand, args)
         }
-
-        override fun onPlay(
-            session: MediaSession,
-            controller: MediaSession.ControllerInfo
-        ): ListenableFuture<SessionResult> {
-            player.play()
-            return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
-        }
-
-        override fun onPause(
-            session: MediaSession,
-            controller: MediaSession.ControllerInfo
-        ): ListenableFuture<SessionResult> {
-            player.pause()
-            return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
-        }
     }
 
     /**

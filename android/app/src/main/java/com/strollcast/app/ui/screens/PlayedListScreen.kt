@@ -16,7 +16,7 @@ import com.strollcast.app.repository.PodcastRepository
 import com.strollcast.app.ui.components.CompletedEpisodeCard
 import com.strollcast.app.viewmodels.PlayedViewModel
 import dagger.hilt.EntryPoint
-import dagger.hilt.EntryPointAccessors
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
 import kotlinx.coroutines.launch

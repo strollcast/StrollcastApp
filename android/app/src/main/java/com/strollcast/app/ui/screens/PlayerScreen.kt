@@ -14,6 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
+import com.strollcast.app.viewmodels.PlayerUiState
 import com.strollcast.app.viewmodels.PlayerViewModel
 import kotlin.math.roundToInt
 
