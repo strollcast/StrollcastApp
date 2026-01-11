@@ -86,15 +86,15 @@
 
 ### UI Components
 
-- [ ] T026 [US1] Create TranscriptLineItem composable displaying speaker, text, and highlighted state with Card background (android/app/src/main/java/com/strollcast/app/ui/components/TranscriptLineItem.kt)
-- [ ] T027 [US1] Add clickable modifier to TranscriptLineItem that triggers onSeekTo callback with cue.startMs (android/app/src/main/java/com/strollcast/app/ui/components/TranscriptLineItem.kt)
+- [X] T026 [US1] Create TranscriptLineItem composable displaying speaker, text, and highlighted state with Card background (android/app/src/main/java/com/strollcast/app/ui/components/TranscriptLineItem.kt)
+- [X] T027 [US1] Add clickable modifier to TranscriptLineItem that triggers onSeekTo callback with cue.startMs (android/app/src/main/java/com/strollcast/app/ui/components/TranscriptLineItem.kt)
 
 ### Screens
 
-- [ ] T028 [US1] Create TranscriptScreen composable with LazyColumn using stable keys (key = { it.startMs }) for transcript lines (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
-- [ ] T029 [US1] Implement loading/error/content states in TranscriptScreen based on uiState (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
-- [ ] T030 [US1] Add LaunchedEffect to TranscriptScreen to call viewModel.loadTranscript when episodeId changes (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
-- [ ] T031 [US1] Implement auto-scroll feature using LazyListState.animateScrollToItem when currentLineIndex changes (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
+- [X] T028 [US1] Create TranscriptScreen composable with LazyColumn using stable keys (key = { it.startMs }) for transcript lines (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
+- [X] T029 [US1] Implement loading/error/content states in TranscriptScreen based on uiState (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
+- [X] T030 [US1] Add LaunchedEffect to TranscriptScreen to call viewModel.loadTranscript when episodeId changes (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
+- [X] T031 [US1] Implement auto-scroll feature using LazyListState.animateScrollToItem when currentLineIndex changes (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
 
 ### Integration
 
