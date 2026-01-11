@@ -98,9 +98,9 @@
 
 ### Integration
 
-- [ ] T032 [US1] Update PlayerScreen to add "Transcript" tab using TabRow alongside player controls (android/app/src/main/java/com/strollcast/app/ui/screens/PlayerScreen.kt)
-- [ ] T033 [US1] Add navigation route "transcript/{episodeId}" to NavHost with TranscriptScreen composable (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
-- [ ] T034 [US1] Connect PlayerViewModel playback position updates to TranscriptViewModel.updateCurrentPosition via SharedFlow or StateFlow (android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt)
+- [X] T032 [US1] Update PlayerScreen to add "Transcript" tab using TabRow alongside player controls (android/app/src/main/java/com/strollcast/app/ui/screens/PlayerScreen.kt)
+- [X] T033 [US1] Add navigation route "transcript/{episodeId}" to NavHost with TranscriptScreen composable (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
+- [X] T034 [US1] Connect PlayerViewModel playback position updates to TranscriptViewModel.updateCurrentPosition via SharedFlow or StateFlow (android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt)
 
 ### Testing
 
