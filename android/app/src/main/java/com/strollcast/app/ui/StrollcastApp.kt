@@ -2,6 +2,7 @@ package com.strollcast.app.ui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Settings
@@ -16,12 +17,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.strollcast.app.ui.screens.NotesScreen
+import com.strollcast.app.ui.screens.PlayedListScreen
 import com.strollcast.app.ui.screens.PodcastListScreen
 import com.strollcast.app.ui.screens.PlayerScreen
 import com.strollcast.app.ui.screens.SettingsScreen
 
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Podcasts : Screen("podcasts", "Podcasts", Icons.Filled.Home)
+    object Played : Screen("played", "Played", Icons.Filled.CheckCircle)
     object Player : Screen("player", "Player", Icons.Filled.PlayCircle) {
         fun createRoute(podcastId: String) = "player/$podcastId"
     }
@@ -35,7 +38,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
 @Composable
 fun StrollcastApp() {
     val navController = rememberNavController()
-    val items = listOf(Screen.Podcasts, Screen.Player, Screen.Notes, Screen.Settings)
+    val items = listOf(Screen.Podcasts, Screen.Played, Screen.Player, Screen.Notes, Screen.Settings)
 
     Scaffold(
         bottomBar = {
@@ -72,6 +75,17 @@ fun StrollcastApp() {
                     onPodcastClick = { podcast ->
                         // Navigate to player with podcast ID
                         navController.navigate(Screen.Player.createRoute(podcast.id))
+                    }
+                )
+            }
+            composable(Screen.Played.route) {
+                PlayedListScreen(
+                    onEpisodeClick = { episodeId ->
+                        navController.navigate(Screen.Player.createRoute(episodeId))
+                    },
+                    onReplayClick = { episodeId ->
+                        // Navigate to player and it will reset position to 0
+                        navController.navigate(Screen.Player.createRoute(episodeId))
                     }
                 )
             }

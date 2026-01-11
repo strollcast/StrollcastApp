@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.strollcast.app.models.Podcast
+import com.strollcast.app.repository.HistoryRepository
 import com.strollcast.app.repository.PodcastRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ data class PlayerUiState(
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    private val repository: PodcastRepository
+    private val repository: PodcastRepository,
+    private val historyRepository: HistoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
@@ -124,6 +126,26 @@ class PlayerViewModel @Inject constructor(
 
         viewModelScope.launch {
             repository.savePlaybackPosition(podcast.id, position)
+
+            // Check if episode should be marked as complete (90% threshold)
+            checkCompletion(podcast.id, position)
+        }
+    }
+
+    /**
+     * Check if episode reaches completion threshold and mark as complete
+     */
+    private fun checkCompletion(episodeId: String, currentPosition: Long) {
+        val duration = _uiState.value.duration
+
+        if (duration > 0 && currentPosition > 0) {
+            viewModelScope.launch {
+                historyRepository.markEpisodeComplete(
+                    episodeId = episodeId,
+                    playbackPosition = currentPosition,
+                    episodeDuration = duration
+                )
+            }
         }
     }
 
