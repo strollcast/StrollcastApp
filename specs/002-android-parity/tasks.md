@@ -43,7 +43,7 @@
 
 ### Dependency Injection
 
-- [ ] T011 [SETUP] Create or update RepositoryModule to provide TranscriptRepository, NoteRepository, HistoryRepository with @Singleton scope (android/app/src/main/java/com/strollcast/app/di/RepositoryModule.kt)
+- [X] T011 [SETUP] Create or update RepositoryModule to provide TranscriptRepository, NoteRepository, HistoryRepository with @Singleton scope (android/app/src/main/java/com/strollcast/app/di/RepositoryModule.kt)
 - [X] T012 [SETUP] Update DatabaseModule to provide new DAOs via database instance (android/app/src/main/java/com/strollcast/app/di/DatabaseModule.kt)
 
 ### Utilities
@@ -72,17 +72,17 @@
 
 ### Data Layer
 
-- [ ] T018 [US1] Update Podcast model to include transcriptUrl: String? field from API response (android/app/src/main/java/com/strollcast/app/models/Podcast.kt)
-- [ ] T019 [US1] Create TranscriptRepository with getTranscript method implementing 3-tier caching (memory → Room → network) (android/app/src/main/java/com/strollcast/app/repository/TranscriptRepository.kt)
-- [ ] T020 [US1] Implement downloadVTT method in TranscriptRepository using OkHttpClient to fetch from transcriptUrl (android/app/src/main/java/com/strollcast/app/repository/TranscriptRepository.kt)
-- [ ] T021 [US1] Implement parseAndCache method in TranscriptRepository to parse VTT with VttParser and insert TranscriptEntity + TranscriptLineEntity into Room (android/app/src/main/java/com/strollcast/app/repository/TranscriptRepository.kt)
+- [X] T018 [US1] Update Podcast model to include transcriptUrl: String? field from API response (android/app/src/main/java/com/strollcast/app/models/Podcast.kt)
+- [X] T019 [US1] Create TranscriptRepository with getTranscript method implementing 3-tier caching (memory → Room → network) (android/app/src/main/java/com/strollcast/app/repository/TranscriptRepository.kt)
+- [X] T020 [US1] Implement downloadVTT method in TranscriptRepository using OkHttpClient to fetch from transcriptUrl (android/app/src/main/java/com/strollcast/app/repository/TranscriptRepository.kt)
+- [X] T021 [US1] Implement parseAndCache method in TranscriptRepository to parse VTT with VttParser and insert TranscriptEntity + TranscriptLineEntity into Room (android/app/src/main/java/com/strollcast/app/repository/TranscriptRepository.kt)
 
 ### ViewModel
 
-- [ ] T022 [US1] Create TranscriptUiState data class with transcript: List<TranscriptCue>, isLoading, error, currentLineIndex fields (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
-- [ ] T023 [US1] Create TranscriptViewModel with @HiltViewModel annotation, inject TranscriptRepository (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
-- [ ] T024 [US1] Implement loadTranscript method in TranscriptViewModel to fetch from repository and update StateFlow<TranscriptUiState> (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
-- [ ] T025 [US1] Implement updateCurrentPosition method in TranscriptViewModel to find and highlight current line based on playback position (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
+- [X] T022 [US1] Create TranscriptUiState data class with transcript: List<TranscriptCue>, isLoading, error, currentLineIndex fields (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
+- [X] T023 [US1] Create TranscriptViewModel with @HiltViewModel annotation, inject TranscriptRepository (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
+- [X] T024 [US1] Implement loadTranscript method in TranscriptViewModel to fetch from repository and update StateFlow<TranscriptUiState> (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
+- [X] T025 [US1] Implement updateCurrentPosition method in TranscriptViewModel to find and highlight current line based on playback position (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
 
 ### UI Components
 
