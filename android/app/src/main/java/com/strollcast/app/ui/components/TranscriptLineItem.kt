@@ -37,9 +37,15 @@ fun TranscriptLineItem(
     onLongClick: (() -> Unit)? = null,
     onLinkClick: ((String) -> Unit)? = null
 ) {
+    // Use appropriate link color based on highlight state for good contrast
+    val linkColor = if (isHighlighted) {
+        MaterialTheme.colorScheme.tertiary
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
     // Parse markdown links and build annotated string
-    val linkColor = MaterialTheme.colorScheme.primary
-    val annotatedText = remember(cue.text, linkColor) {
+    val annotatedText = remember(cue.text, linkColor, isHighlighted) {
         MarkdownLinkParser.buildAnnotatedString(
             text = cue.text,
             linkColor = linkColor
