@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-01-11
 
 ## Active Technologies
+- Kotlin 1.9+ (Android) (003-reference-navigation)
+- Room database (existing TranscriptLineEntity already stores text with markdown) (003-reference-navigation)
 
 - Kotlin 1.9+ (current Android app standard) (002-android-parity)
 
@@ -22,6 +24,7 @@ tests/
 Kotlin 1.9+ (current Android app standard): Follow standard conventions
 
 ## Recent Changes
+- 003-reference-navigation: Added Kotlin 1.9+ (Android)
 
 - 002-android-parity: Added Kotlin 1.9+ (current Android app standard)
 

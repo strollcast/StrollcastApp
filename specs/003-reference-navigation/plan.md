@@ -1,31 +1,45 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Reference Navigation in Transcripts
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `003-reference-navigation` | **Date**: 2026-01-11 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `/specs/003-reference-navigation/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+Enable Android users to tap markdown-formatted reference links in transcript views to navigate to other episodes. When a transcript segment contains a link like `[FlashAttention-2](https://released.strollcast.com/episodes/dao-2023-flashattention_2_fa/dao-2023-flashattention_2_fa.mp3)`, the link will be rendered as clickable blue underlined text. Tapping the link extracts the episode ID, fetches the episode metadata from the API, and loads it for playback using existing PlayerViewModel functionality. The current episode is added to playback history to enable returning via existing "Play Previous" controls.
+
+**Technical Approach**: Use Jetpack Compose's `AnnotatedString` with `UrlAnnotation` to parse markdown links from transcript text and make them clickable. Implement regex-based markdown parser utility to extract link text and URLs. Add click handler to `TranscriptLineItem` that processes episode URLs, validates format, fetches episode from repository, and triggers playback via ViewModel.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
+**Language/Version**: Kotlin 1.9+ (Android)
+**Primary Dependencies**:
+- Jetpack Compose with Material3
+- Hilt for dependency injection
+- Room for local database (existing TranscriptLineEntity)
+- Retrofit for API calls (existing PodcastRepository)
+- Kotlin Coroutines for async operations
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Storage**: Room database (existing TranscriptLineEntity already stores text with markdown)
+**Testing**: Manual testing on physical device and emulator (unit tests optional for markdown parser)
+**Target Platform**: Android 8.0+ (SDK 26), targeting SDK 36
+**Project Type**: Mobile (Android app)
+**Performance Goals**:
+- Link parsing: < 50ms per transcript segment
+- Episode navigation: < 3s from tap to playback start (network dependent)
+- UI rendering: 60 fps scrolling with clickable links
+
+**Constraints**:
+- Must work offline (only for downloaded episodes, with appropriate error messaging)
+- Minimum 48dp touch targets for accessibility
+- Must not break existing transcript functionality (notes, seek, auto-scroll)
+- Links must be visible against both normal and highlighted backgrounds
+
+**Scale/Scope**:
+- ~200 transcript segments per episode
+- Multiple links possible per segment
+- Episode catalog currently ~50 episodes (growing)
 
 ## Constitution Check
 
@@ -33,80 +47,69 @@
 
 Verify compliance with principles from `.specify/memory/constitution.md`:
 
-- [ ] **Cross-Platform Parity**: Does this feature require implementation on both iOS and Android? If iOS-only or Android-only, justify why.
-- [ ] **API Contract Stability**: Does this feature require API changes? If yes, are they backward compatible? Document migration path.
-- [ ] **Offline-First Architecture**: Does this feature work offline? What data is cached? How are sync conflicts handled?
-- [ ] **Platform-Native UI**: Does UI follow platform conventions (SwiftUI/iOS HIG for iOS, Compose/Material3 for Android)?
-- [ ] **Service-Oriented Architecture**: Is business logic in services (iOS) or repository/ViewModels (Android), separate from UI?
-- [ ] **Feature Flags & Graceful Degradation**: If optional dependencies (Zotero, permissions), does feature degrade gracefully?
+- [x] **Cross-Platform Parity**: Android-only implementation to bring platform to parity with iOS. iOS already has this via voice command ("Hey Siri, go to reference"). Android implements via direct tap interaction which is more natural for mobile UI. Feature documented in spec as Android-specific with iOS already having equivalent functionality.
 
-**Violations requiring justification**: [List any principle violations and why simpler alternatives were rejected]
+- [x] **API Contract Stability**: No API changes required. Uses existing `GET /episodes` endpoint to fetch referenced episode metadata. Transcript VTT files already contain markdown links (confirmed by examining actual transcripts).
+
+- [x] **Offline-First Architecture**:
+  - Link parsing and rendering works offline
+  - Navigation only allowed to downloaded episodes when offline
+  - Error message shown when tapping link to non-downloaded episode offline: "Referenced episode requires internet connection. Download it first to access offline."
+  - Uses existing DownloadManager to check episode availability
+
+- [x] **Platform-Native UI**:
+  - Uses Jetpack Compose `AnnotatedString` (native Android text formatting)
+  - Follows Material Design 3 with `MaterialTheme.colorScheme.primary` for link color
+  - Uses `ClickableText` or `Text` with `UrlAnnotation` (Compose best practices)
+  - Respects minimum touch target size (48dp)
+
+- [x] **Service-Oriented Architecture**:
+  - Business logic in PlayerViewModel (existing)
+  - Data fetching in PodcastRepository (existing)
+  - UI layer (TranscriptLineItem, TranscriptScreen) only handles rendering and user interaction
+  - New utility class: `MarkdownLinkParser` for parsing logic (pure function, testable)
+
+- [x] **Feature Flags & Graceful Degradation**:
+  - No external dependencies required
+  - Degrades gracefully when offline (shows error, doesn't crash)
+  - Malformed links or non-episode URLs render as plain text (no crash)
+  - Episode not found shows error toast (doesn't crash)
+
+**Violations requiring justification**: None. All principles satisfied.
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+specs/003-reference-navigation/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
 ├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (API contracts - none needed, uses existing)
 └── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths. The delivered plan must not include Option labels.
--->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: iOS App Only
-ios/StrollcastApp/
-├── Models/              # Data models
-├── Services/            # Business logic (PodcastService, AudioPlayer, etc.)
-├── Views/               # SwiftUI views
-├── Assets.xcassets/     # Images, colors
-└── Info.plist
-
-# [REMOVE IF UNUSED] Option 2: Android App Only
 android/app/src/main/java/com/strollcast/app/
-├── data/                # Database (Room) layer
-├── di/                  # Dependency injection (Hilt)
-├── models/              # Data models
-├── network/             # API client (Retrofit)
-├── repository/          # Data repository pattern
-├── services/            # Background services (PlaybackService)
-├── ui/                  # Jetpack Compose UI
-├── viewmodels/          # ViewModels (MVVM)
-└── MainActivity.kt
-
-# [REMOVE IF UNUSED] Option 3: Both Platforms (Cross-Platform Feature)
-ios/StrollcastApp/
-├── [iOS structure as above]
-└── [New feature components]
-
-android/app/src/main/java/com/strollcast/app/
-├── [Android structure as above]
-└── [Equivalent feature components]
-
-# [REMOVE IF UNUSED] Option 4: API Change (Backend in sibling director/ folder)
-../../director/
-├── modal/src/           # Modal serverless functions
-│   └── [API endpoints, generators]
-└── public/              # Static content and episode data
+├── ui/
+│   ├── components/
+│   │   └── TranscriptLineItem.kt         # MODIFY: Add clickable link support
+│   └── screens/
+│       └── TranscriptScreen.kt            # MODIFY: Add reference navigation handler
+├── utils/
+│   └── MarkdownLinkParser.kt              # NEW: Parse markdown links from text
+├── viewmodels/
+│   └── TranscriptViewModel.kt             # MODIFY: Add reference navigation method
+└── repository/
+    └── PodcastRepository.kt               # EXISTING: getPodcastById() already available
 ```
 
-**Structure Decision**: [Document the selected structure. For cross-platform features (Option 3), specify which platform is being implemented first and create tracking issue for the other platform.]
+**Structure Decision**: Android-only implementation (Option 2 from template). iOS already has this feature via voice commands. This implementation uses direct UI interaction which is more intuitive for mobile users. No tracking issue needed as iOS already has feature parity through different interaction model (voice vs tap).
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+No violations requiring justification. All Constitution principles are satisfied.
