@@ -241,6 +241,31 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Navigate to previous episode in playback history
+     * Called by voice command "play previous"
+     *
+     * Note: This uses Media3's seekToPrevious() which manages the playback history.
+     * When navigateToReferencedEpisode() is called, savePosition() is called first,
+     * which allows Media3 to track the episode chain for previous navigation.
+     */
+    fun playPreviousEpisode() {
+        try {
+            player?.let {
+                if (it.hasPreviousMediaItem()) {
+                    it.seekToPrevious()
+                    _voiceCommandFeedback.value = "Going back to previous episode"
+                } else {
+                    _voiceCommandFeedback.value = "Already at first episode"
+                }
+            } ?: run {
+                _voiceCommandFeedback.value = "No player available"
+            }
+        } catch (e: Exception) {
+            _voiceCommandFeedback.value = "Failed to go to previous episode: ${e.message}"
+        }
+    }
+
     override fun onCleared() {
         savePosition()
         super.onCleared()

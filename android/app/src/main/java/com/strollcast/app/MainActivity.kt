@@ -31,8 +31,7 @@ class MainActivity : ComponentActivity() {
                     playerViewModel.playNextReference()
                 }
                 PlaybackService.VoiceCommandType.PLAY_PREVIOUS.name -> {
-                    // Will be implemented in Phase 4 (T022)
-                    // playerViewModel.playPreviousEpisode()
+                    playerViewModel.playPreviousEpisode()
                 }
             }
         }

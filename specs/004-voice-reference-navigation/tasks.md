@@ -68,10 +68,10 @@ This document breaks down the voice navigation feature into implementable tasks 
 
 **Tasks**:
 
-- [ ] T019 [US2] Add playPreviousEpisode() method to PlayerViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt
-- [ ] T020 [US2] Integrate with existing PlaybackHistoryManager in PlayerViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt
-- [ ] T021 [US2] Add PLAY_PREVIOUS command handling to handleVoiceQuery() in PlaybackService in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
-- [ ] T022 [US2] Handle PLAY_PREVIOUS command in voiceCommandReceiver in android/app/src/main/java/com/strollcast/app/MainActivity.kt
+- [x] T019 [US2] Add playPreviousEpisode() method to PlayerViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt
+- [x] T020 [US2] Integrate with existing PlaybackHistoryManager in PlayerViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt
+- [x] T021 [US2] Add PLAY_PREVIOUS command handling to handleVoiceQuery() in PlaybackService in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
+- [x] T022 [US2] Handle PLAY_PREVIOUS command in voiceCommandReceiver in android/app/src/main/java/com/strollcast/app/MainActivity.kt
 - [ ] T023 [US2] Test voice command "play previous" after following a reference
 - [ ] T024 [US2] Test voice command "play previous" with no previous episode (error case)
 
