@@ -178,4 +178,17 @@ class TranscriptRepository @Inject constructor(
         memoryCache.clear()
         Log.d(TAG, "Cleared memory cache")
     }
+
+    /**
+     * Get transcript line by episode ID and line number
+     *
+     * @param episodeId Episode ID
+     * @param lineNumber Line number (0-indexed)
+     * @return TranscriptLineEntity or null if not found
+     */
+    suspend fun getTranscriptLineByNumber(episodeId: String, lineNumber: Int): TranscriptLineEntity? {
+        return withContext(Dispatchers.IO) {
+            transcriptDao.getTranscriptLineByNumber(episodeId, lineNumber)
+        }
+    }
 }

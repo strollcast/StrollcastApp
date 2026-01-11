@@ -115,47 +115,47 @@
 **Goal**: Enable users to create, edit, delete, and view notes attached to transcript lines
 
 **Phase Success Criteria**:
-- [ ] Users can long-press any transcript line to create a note
-- [ ] Note indicator appears on lines with attached notes
-- [ ] Tapping note indicator opens detail view with edit/delete options
-- [ ] Notes persist across app restarts
-- [ ] NotesScreen shows all notes across episodes with context
+- [X] Users can long-press any transcript line to create a note
+- [X] Note indicator appears on lines with attached notes
+- [X] Tapping note indicator opens detail view with edit/delete options
+- [X] Notes persist across app restarts
+- [X] NotesScreen shows all notes across episodes with context
 
 ### Data Layer
 
-- [ ] T038 [US2] Create NoteRepository with createNote, updateNote, deleteNote, getNotesForEpisode, getNotesForLine methods (android/app/src/main/java/com/strollcast/app/repository/NoteRepository.kt)
-- [ ] T039 [US2] Implement note validation in NoteRepository (content not empty, max 5000 chars, createdAt <= updatedAt) (android/app/src/main/java/com/strollcast/app/repository/NoteRepository.kt)
+- [X] T038 [US2] Create NoteRepository with createNote, updateNote, deleteNote, getNotesForEpisode, getNotesForLine methods (android/app/src/main/java/com/strollcast/app/repository/NoteRepository.kt)
+- [X] T039 [US2] Implement note validation in NoteRepository (content not empty, max 5000 chars, createdAt <= updatedAt) (android/app/src/main/java/com/strollcast/app/repository/NoteRepository.kt)
 
 ### ViewModel
 
-- [ ] T040 [US2] Create NoteUiState data class with notes: List<Note>, isLoading, error, selectedNote fields (android/app/src/main/java/com/strollcast/app/viewmodels/NoteViewModel.kt)
-- [ ] T041 [US2] Create NoteViewModel with @HiltViewModel annotation, inject NoteRepository (android/app/src/main/java/com/strollcast/app/viewmodels/NoteViewModel.kt)
-- [ ] T042 [US2] Implement createNote, updateNote, deleteNote, loadNotesForEpisode methods in NoteViewModel (android/app/src/main/java/com/strollcast/app/viewmodels/NoteViewModel.kt)
-- [ ] T043 [US2] Add note count tracking to TranscriptViewModel to display note indicators on lines (android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt)
+- [X] T040 [US2] Create NoteUiState data class with notes: List<Note>, isLoading, error, selectedNote fields (android/app/src/main/java/com/strollcast/app/viewmodels/NoteViewModel.kt)
+- [X] T041 [US2] Create NoteViewModel with @HiltViewModel annotation, inject NoteRepository (android/app/src/main/java/com/strollcast/app/viewmodels/NoteViewModel.kt)
+- [X] T042 [US2] Implement createNote, updateNote, deleteNote, loadNotesForEpisode methods in NoteViewModel (android/app/src/main/java/com/strollcast/app/viewmodels/NoteViewModel.kt)
+- [X] T043 [US2] Add note count tracking to NoteViewModel to display note indicators on lines (android/app/src/main/java/com/strollcast/app/viewmodels/NoteViewModel.kt)
 
 ### UI Components
 
-- [ ] T044 [US2] Create NoteDialog composable with TextField, Save/Cancel buttons for note creation/editing (android/app/src/main/java/com/strollcast/app/ui/components/NoteDialog.kt)
-- [ ] T045 [US2] Add note indicator icon to TranscriptLineItem when line has notes (use getNoteCount from DAO) (android/app/src/main/java/com/strollcast/app/ui/components/TranscriptLineItem.kt)
-- [ ] T046 [US2] Update TranscriptLineItem to show long-press menu with "Add Note" option (android/app/src/main/java/com/strollcast/app/ui/components/TranscriptLineItem.kt)
+- [X] T044 [US2] Create NoteDialog composable with TextField, Save/Cancel buttons for note creation/editing (android/app/src/main/java/com/strollcast/app/ui/components/NoteDialog.kt)
+- [X] T045 [US2] Add note indicator icon to TranscriptLineItem when line has notes (use getNoteCount from DAO) (android/app/src/main/java/com/strollcast/app/ui/components/TranscriptLineItem.kt)
+- [X] T046 [US2] Update TranscriptLineItem to show long-press menu with "Add Note" option (android/app/src/main/java/com/strollcast/app/ui/components/TranscriptLineItem.kt)
 
 ### Screens
 
-- [ ] T047 [US2] Create NotesScreen composable displaying all notes across episodes in LazyColumn sorted by createdAt (android/app/src/main/java/com/strollcast/app/ui/screens/NotesScreen.kt)
-- [ ] T048 [US2] Add episode title and transcript line text context to each note card in NotesScreen (android/app/src/main/java/com/strollcast/app/ui/screens/NotesScreen.kt)
-- [ ] T049 [US2] Implement edit/delete actions on note cards in NotesScreen using swipe or menu (android/app/src/main/java/com/strollcast/app/ui/screens/NotesScreen.kt)
+- [X] T047 [US2] Create NotesScreen composable displaying all notes across episodes in LazyColumn sorted by createdAt (android/app/src/main/java/com/strollcast/app/ui/screens/NotesScreen.kt)
+- [X] T048 [US2] Add episode title and transcript line text context to each note card in NotesScreen (android/app/src/main/java/com/strollcast/app/ui/screens/NotesScreen.kt)
+- [X] T049 [US2] Implement edit/delete actions on note cards in NotesScreen using swipe or menu (android/app/src/main/java/com/strollcast/app/ui/screens/NotesScreen.kt)
 
 ### Integration
 
-- [ ] T050 [US2] Add long-press gesture detector to TranscriptScreen items to open NoteDialog (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
-- [ ] T051 [US2] Add navigation route "notes" and "notes/{episodeId}" to NavHost for NotesScreen (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
-- [ ] T052 [US2] Add "Notes" navigation item to bottom navigation or drawer menu (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
+- [X] T050 [US2] Add long-press gesture detector to TranscriptScreen items to open NoteDialog (android/app/src/main/java/com/strollcast/app/ui/screens/TranscriptScreen.kt)
+- [X] T051 [US2] Add navigation route "notes" and "notes/{episodeId}" to NavHost for NotesScreen (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
+- [X] T052 [US2] Add "Notes" navigation item to bottom navigation or drawer menu (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
 
 ### Testing
 
-- [ ] T053 [US2] Write NoteDao instrumentation tests for insert, update, delete, and query operations (android/app/src/androidTest/java/com/strollcast/app/data/NoteDaoTest.kt)
-- [ ] T054 [US2] Write NoteRepository unit tests verifying validation rules and DAO interactions (android/app/src/test/java/com/strollcast/app/repository/NoteRepositoryTest.kt)
-- [ ] T055 [US2] Write Compose UI test for NoteDialog verifying create/edit/save flows (android/app/src/androidTest/java/com/strollcast/app/ui/components/NoteDialogTest.kt)
+- [X] T053 [US2] Write NoteDao instrumentation tests for insert, update, delete, and query operations (android/app/src/androidTest/java/com/strollcast/app/data/NoteDaoTest.kt)
+- [X] T054 [US2] Write NoteRepository unit tests verifying validation rules and DAO interactions (android/app/src/test/java/com/strollcast/app/repository/NoteRepositoryTest.kt)
+- [X] T055 [US2] Write Compose UI test for NoteDialog verifying create/edit/save flows (android/app/src/androidTest/java/com/strollcast/app/ui/components/NoteDialogTest.kt)
 
 ---
 
