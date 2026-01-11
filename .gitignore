@@ -44,3 +44,11 @@ fastlane/test_output
 
 # Code Injection
 iOSInjectionProject/
+
+# Signing keys and certificates
+*.keystore
+*.p12
+*.mobileprovision
+
+# AI assistant directories
+.claude/

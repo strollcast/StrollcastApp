@@ -24,8 +24,18 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("/Users/mseritan/dev/strollcast/StrollcastApp/strollcast-release.keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = "strollcast"
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -59,6 +69,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+
+
+
 }
 
 dependencies {
