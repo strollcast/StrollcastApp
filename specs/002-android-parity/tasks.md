@@ -164,44 +164,44 @@
 **Goal**: Display completed episodes in dedicated "Played" list sorted by completion date
 
 **Phase Success Criteria**:
-- [ ] Episodes are marked complete when user reaches 90% playback
-- [ ] Played list displays completed episodes with completion badge and date
-- [ ] Played list sorted by most recently completed
-- [ ] Tapping played episode opens details with "Replay from Start" option
-- [ ] Offline access to played history
+- [X] Episodes are marked complete when user reaches 90% playback
+- [X] Played list displays completed episodes with completion badge and date
+- [X] Played list sorted by most recently completed
+- [X] Tapping played episode opens details with "Replay from Start" option
+- [X] Offline access to played history
 
 ### Data Layer
 
-- [ ] T056 [US3] Create HistoryRepository with markEpisodeComplete, getCompletedEpisodes, removeFromCompleted methods (android/app/src/main/java/com/strollcast/app/repository/HistoryRepository.kt)
-- [ ] T057 [US3] Implement completion logic in HistoryRepository to insert CompletedEpisodeEntity when playbackPosition >= (duration * 0.9) (android/app/src/main/java/com/strollcast/app/repository/HistoryRepository.kt)
+- [X] T056 [US3] Create HistoryRepository with markEpisodeComplete, getCompletedEpisodes, removeFromCompleted methods (android/app/src/main/java/com/strollcast/app/repository/HistoryRepository.kt)
+- [X] T057 [US3] Implement completion logic in HistoryRepository to insert CompletedEpisodeEntity when playbackPosition >= (duration * 0.9) (android/app/src/main/java/com/strollcast/app/repository/HistoryRepository.kt)
 
 ### ViewModel
 
-- [ ] T058 [US3] Create PlayedUiState data class with completedEpisodes: List<CompletedEpisode>, isLoading, error fields (android/app/src/main/java/com/strollcast/app/viewmodels/PlayedViewModel.kt)
-- [ ] T059 [US3] Create PlayedViewModel with @HiltViewModel annotation, inject HistoryRepository (android/app/src/main/java/com/strollcast/app/viewmodels/PlayedViewModel.kt)
-- [ ] T060 [US3] Implement loadCompletedEpisodes method in PlayedViewModel collecting Flow from DAO (android/app/src/main/java/com/strollcast/app/viewmodels/PlayedViewModel.kt)
+- [X] T058 [US3] Create PlayedUiState data class with completedEpisodes: List<CompletedEpisode>, isLoading, error fields (android/app/src/main/java/com/strollcast/app/viewmodels/PlayedViewModel.kt)
+- [X] T059 [US3] Create PlayedViewModel with @HiltViewModel annotation, inject HistoryRepository (android/app/src/main/java/com/strollcast/app/viewmodels/PlayedViewModel.kt)
+- [X] T060 [US3] Implement loadCompletedEpisodes method in PlayedViewModel collecting Flow from DAO (android/app/src/main/java/com/strollcast/app/viewmodels/PlayedViewModel.kt)
 
 ### UI Components
 
-- [ ] T061 [US3] Create CompletedEpisodeCard composable displaying episode title, completion badge, completedAt date, and duration (android/app/src/main/java/com/strollcast/app/ui/components/CompletedEpisodeCard.kt)
+- [X] T061 [US3] Create CompletedEpisodeCard composable displaying episode title, completion badge, completedAt date, and duration (android/app/src/main/java/com/strollcast/app/ui/components/CompletedEpisodeCard.kt)
 
 ### Screens
 
-- [ ] T062 [US3] Create PlayedListScreen composable with LazyColumn of CompletedEpisodeCard sorted by completedAt DESC (android/app/src/main/java/com/strollcast/app/ui/screens/PlayedListScreen.kt)
-- [ ] T063 [US3] Implement empty state in PlayedListScreen when no completed episodes exist (android/app/src/main/java/com/strollcast/app/ui/screens/PlayedListScreen.kt)
-- [ ] T064 [US3] Add click handler to CompletedEpisodeCard to navigate to episode details with "Replay" option (android/app/src/main/java/com/strollcast/app/ui/screens/PlayedListScreen.kt)
+- [X] T062 [US3] Create PlayedListScreen composable with LazyColumn of CompletedEpisodeCard sorted by completedAt DESC (android/app/src/main/java/com/strollcast/app/ui/screens/PlayedListScreen.kt)
+- [X] T063 [US3] Implement empty state in PlayedListScreen when no completed episodes exist (android/app/src/main/java/com/strollcast/app/ui/screens/PlayedListScreen.kt)
+- [X] T064 [US3] Add click handler to CompletedEpisodeCard to navigate to episode details with "Replay" option (android/app/src/main/java/com/strollcast/app/ui/screens/PlayedListScreen.kt)
 
 ### Integration
 
-- [ ] T065 [US3] Update PlayerViewModel or PlaybackService to call HistoryRepository.markEpisodeComplete when playback reaches 90% (android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt)
-- [ ] T066 [US3] Add navigation route "played" to NavHost for PlayedListScreen (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
-- [ ] T067 [US3] Add "Played" tab or menu item to main navigation (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
+- [X] T065 [US3] Update PlayerViewModel or PlaybackService to call HistoryRepository.markEpisodeComplete when playback reaches 90% (android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt)
+- [X] T066 [US3] Add navigation route "played" to NavHost for PlayedListScreen (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
+- [X] T067 [US3] Add "Played" tab or menu item to main navigation (android/app/src/main/java/com/strollcast/app/ui/StrollcastApp.kt)
 
 ### Testing
 
-- [ ] T068 [US3] Write CompletedEpisodeDao instrumentation tests for insert, query, and delete operations (android/app/src/androidTest/java/com/strollcast/app/data/CompletedEpisodeDaoTest.kt)
-- [ ] T069 [US3] Write HistoryRepository unit tests verifying 90% completion threshold logic (android/app/src/test/java/com/strollcast/app/repository/HistoryRepositoryTest.kt)
-- [ ] T070 [US3] Write Compose UI test for PlayedListScreen verifying episode display and sorting (android/app/src/androidTest/java/com/strollcast/app/ui/screens/PlayedListScreenTest.kt)
+- [X] T068 [US3] Write CompletedEpisodeDao instrumentation tests for insert, query, and delete operations (android/app/src/androidTest/java/com/strollcast/app/data/CompletedEpisodeDaoTest.kt)
+- [X] T069 [US3] Write HistoryRepository unit tests verifying 90% completion threshold logic (android/app/src/test/java/com/strollcast/app/repository/HistoryRepositoryTest.kt)
+- [X] T070 [US3] Write Compose UI test for PlayedListScreen verifying episode display and sorting (android/app/src/androidTest/java/com/strollcast/app/ui/screens/PlayedListScreenTest.kt)
 
 ---
 
