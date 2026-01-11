@@ -25,6 +25,8 @@ fun PlayerScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Player", "Transcript")
 
     // Create and set up ExoPlayer
     DisposableEffect(Unit) {
@@ -62,125 +64,176 @@ fun PlayerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Now Playing") }
-            )
+            Column {
+                TopAppBar(
+                    title = { Text("Now Playing") }
+                )
+                TabRow(selectedTabIndex = selectedTabIndex) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            text = { Text(title) }
+                        )
+                    }
+                }
+            }
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Podcast Info
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
-            ) {
+        when (selectedTabIndex) {
+            0 -> PlayerContent(
+                uiState = uiState,
+                viewModel = viewModel,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            )
+            1 -> {
                 if (uiState.currentPodcast != null) {
-                    Text(
-                        text = uiState.currentPodcast!!.title ?: "Untitled",
-                        style = MaterialTheme.typography.headlineSmall,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = uiState.currentPodcast!!.authors ?: "Unknown",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    TranscriptScreen(
+                        episodeId = uiState.currentPodcast!!.id,
+                        transcriptUrl = uiState.currentPodcast!!.transcriptUrl,
+                        currentPosition = uiState.currentPosition,
+                        onSeekTo = { position -> viewModel.seekTo(position) },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
                     )
                 } else {
-                    Text(
-                        text = "No podcast selected",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No episode selected",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
+        }
+    }
+}
 
-            // Progress Bar
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Slider(
-                    value = if (uiState.duration > 0) {
-                        uiState.currentPosition.toFloat() / uiState.duration.toFloat()
-                    } else 0f,
-                    onValueChange = { value ->
-                        val position = (value * uiState.duration).toLong()
-                        viewModel.seekTo(position)
-                    },
-                    enabled = uiState.currentPodcast != null
+@Composable
+private fun PlayerContent(
+    uiState: PlayerUiState,
+    viewModel: PlayerViewModel,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Podcast Info
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (uiState.currentPodcast != null) {
+                Text(
+                    text = uiState.currentPodcast!!.title ?: "Untitled",
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = formatTime(uiState.currentPosition),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = formatTime(uiState.duration),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = uiState.currentPodcast!!.authors ?: "Unknown",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Text(
+                    text = "No podcast selected",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+        }
 
-            Spacer(modifier = Modifier.height(24.dp))
+        // Progress Bar
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Slider(
+                value = if (uiState.duration > 0) {
+                    uiState.currentPosition.toFloat() / uiState.duration.toFloat()
+                } else 0f,
+                onValueChange = { value ->
+                    val position = (value * uiState.duration).toLong()
+                    viewModel.seekTo(position)
+                },
+                enabled = uiState.currentPodcast != null
+            )
 
-            // Playback Controls
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(
-                    onClick = { viewModel.skipBackward(15) },
-                    enabled = uiState.currentPodcast != null
-                ) {
-                    Icon(
-                        Icons.Filled.Replay,
-                        contentDescription = "Skip back 15s",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+                Text(
+                    text = formatTime(uiState.currentPosition),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    text = formatTime(uiState.duration),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
 
-                FloatingActionButton(
-                    onClick = {
-                        if (uiState.isPlaying) {
-                            viewModel.pause()
-                        } else {
-                            viewModel.play()
-                        }
-                    },
-                    modifier = Modifier.size(72.dp),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Icon(
-                        if (uiState.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = if (uiState.isPlaying) "Pause" else "Play",
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
+        Spacer(modifier = Modifier.height(24.dp))
 
-                IconButton(
-                    onClick = { viewModel.skipForward(15) },
-                    enabled = uiState.currentPodcast != null
-                ) {
-                    Icon(
-                        Icons.Filled.Forward30,
-                        contentDescription = "Skip forward 15s",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+        // Playback Controls
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = { viewModel.skipBackward(15) },
+                enabled = uiState.currentPodcast != null
+            ) {
+                Icon(
+                    Icons.Filled.Replay,
+                    contentDescription = "Skip back 15s",
+                    modifier = Modifier.size(32.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            FloatingActionButton(
+                onClick = {
+                    if (uiState.isPlaying) {
+                        viewModel.pause()
+                    } else {
+                        viewModel.play()
+                    }
+                },
+                modifier = Modifier.size(72.dp),
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Icon(
+                    if (uiState.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (uiState.isPlaying) "Pause" else "Play",
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+
+            IconButton(
+                onClick = { viewModel.skipForward(15) },
+                enabled = uiState.currentPodcast != null
+            ) {
+                Icon(
+                    Icons.Filled.Forward30,
+                    contentDescription = "Skip forward 15s",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
