@@ -17,18 +17,18 @@ This document breaks down the voice navigation feature into implementable tasks 
 
 **Goal**: Initialize project structure and verify dependencies
 
-- [ ] T001 Verify feature 003 (reference navigation) is merged and working
-- [ ] T002 Verify PlaybackService.kt has MediaSession implementation
-- [ ] T003 Verify TranscriptViewModel can access current segment data
+- [x] T001 Verify feature 003 (reference navigation) is merged and working
+- [x] T002 Verify PlaybackService.kt has MediaSession implementation
+- [x] T003 Verify TranscriptViewModel can access current segment data
 
 ## Phase 2: Foundational Infrastructure (4 tasks)
 
 **Goal**: Create shared utilities needed by all user stories
 
-- [ ] T004 [P] Create VoiceCommandParser utility in android/app/src/main/java/com/strollcast/app/utils/VoiceCommandParser.kt
-- [ ] T005 [P] Create AudioFeedbackManager utility in android/app/src/main/java/com/strollcast/app/utils/AudioFeedbackManager.kt
-- [ ] T006 [P] Add voice feedback strings to android/app/src/main/res/values/strings.xml
-- [ ] T007 Add voice command constants to PlaybackService in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
+- [x] T004 [P] Create VoiceCommandParser utility in android/app/src/main/java/com/strollcast/app/utils/VoiceCommandParser.kt
+- [x] T005 [P] Create AudioFeedbackManager utility in android/app/src/main/java/com/strollcast/app/utils/AudioFeedbackManager.kt
+- [x] T006 [P] Add voice feedback strings to android/app/src/main/res/values/strings.xml
+- [x] T007 Add voice command constants to PlaybackService in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
 
 ## Phase 3: User Story 1 - Voice Command for Reference Navigation (11 tasks)
 
@@ -43,16 +43,16 @@ This document breaks down the voice navigation feature into implementable tasks 
 
 **Tasks**:
 
-- [ ] T008 [US1] Add getCurrentSegmentContext() method to TranscriptViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt
-- [ ] T009 [US1] Add playNextReference() method to PlayerViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt
-- [ ] T010 [US1] Add voiceCommandFeedback StateFlow to PlayerViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt
-- [ ] T011 [US1] Implement onPlayFromSearch() callback in PlaybackService MediaSessionCallback in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
-- [ ] T012 [US1] Implement handleVoiceQuery() method in PlaybackService in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
-- [ ] T013 [US1] Implement sendVoiceCommand() broadcast method in PlaybackService in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
-- [ ] T014 [US1] Initialize AudioFeedbackManager in PlaybackService.onCreate() in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
-- [ ] T015 [US1] Add voiceCommandReceiver BroadcastReceiver to MainActivity in android/app/src/main/java/com/strollcast/app/MainActivity.kt
-- [ ] T016 [US1] Register/unregister voiceCommandReceiver in MainActivity lifecycle in android/app/src/main/java/com/strollcast/app/MainActivity.kt
-- [ ] T017 [US1] Handle PLAY_REFERENCE command in voiceCommandReceiver in android/app/src/main/java/com/strollcast/app/MainActivity.kt
+- [x] T008 [US1] Add getCurrentSegmentContext() method to TranscriptViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/TranscriptViewModel.kt
+- [x] T009 [US1] Add playNextReference() method to PlayerViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt
+- [x] T010 [US1] Add voiceCommandFeedback StateFlow to PlayerViewModel in android/app/src/main/java/com/strollcast/app/viewmodels/PlayerViewModel.kt
+- [x] T011 [US1] Implement onPlayFromSearch() callback in PlaybackService MediaSessionCallback in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
+- [x] T012 [US1] Implement handleVoiceQuery() method in PlaybackService in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
+- [x] T013 [US1] Implement sendVoiceCommand() broadcast method in PlaybackService in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
+- [x] T014 [US1] Initialize AudioFeedbackManager in PlaybackService.onCreate() in android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt
+- [x] T015 [US1] Add voiceCommandReceiver BroadcastReceiver to MainActivity in android/app/src/main/java/com/strollcast/app/MainActivity.kt
+- [x] T016 [US1] Register/unregister voiceCommandReceiver in MainActivity lifecycle in android/app/src/main/java/com/strollcast/app/MainActivity.kt
+- [x] T017 [US1] Handle PLAY_REFERENCE command in voiceCommandReceiver in android/app/src/main/java/com/strollcast/app/MainActivity.kt
 - [ ] T018 [US1] Test voice command "play reference" with episode containing references
 
 ## Phase 4: User Story 2 - Voice Command for Returning to Previous (6 tasks)

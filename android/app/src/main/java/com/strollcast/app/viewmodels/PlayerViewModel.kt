@@ -34,7 +34,12 @@ class PlayerViewModel @Inject constructor(
     private val _navigationError = MutableStateFlow<String?>(null)
     val navigationError: StateFlow<String?> = _navigationError.asStateFlow()
 
+    // Voice command feedback state
+    private val _voiceCommandFeedback = MutableStateFlow<String?>(null)
+    val voiceCommandFeedback: StateFlow<String?> = _voiceCommandFeedback.asStateFlow()
+
     private var player: Player? = null
+    private var transcriptViewModel: TranscriptViewModel? = null
 
     fun setPlayer(player: Player) {
         this.player = player
@@ -197,6 +202,41 @@ class PlayerViewModel @Inject constructor(
                     playbackPosition = currentPosition,
                     episodeDuration = duration
                 )
+            }
+        }
+    }
+
+    fun setTranscriptViewModel(viewModel: TranscriptViewModel) {
+        this.transcriptViewModel = viewModel
+    }
+
+    /**
+     * Play the first reference found in current transcript segment
+     * Called by voice command "play reference"
+     */
+    fun playNextReference() {
+        viewModelScope.launch {
+            try {
+                val currentPodcast = _uiState.value.currentPodcast
+                if (currentPodcast == null) {
+                    _voiceCommandFeedback.value = "No episode currently playing"
+                    return@launch
+                }
+
+                val currentPosition = player?.currentPosition ?: return@launch
+                val context = transcriptViewModel?.getCurrentSegmentContext(currentPodcast.id, currentPosition)
+
+                if (context == null || context.parsedReferences.isEmpty()) {
+                    _voiceCommandFeedback.value = "No reference found in current segment"
+                    return@launch
+                }
+
+                val firstReference = context.parsedReferences.first()
+                navigateToReferencedEpisode(firstReference.episodeId)
+                _voiceCommandFeedback.value = "Playing reference episode"
+
+            } catch (e: Exception) {
+                _voiceCommandFeedback.value = "Failed to play reference: ${e.message}"
             }
         }
     }
