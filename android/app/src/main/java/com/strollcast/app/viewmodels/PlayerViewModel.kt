@@ -30,6 +30,10 @@ class PlayerViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
+    // Navigation error state for reference link navigation
+    private val _navigationError = MutableStateFlow<String?>(null)
+    val navigationError: StateFlow<String?> = _navigationError.asStateFlow()
+
     private var player: Player? = null
 
     fun setPlayer(player: Player) {
@@ -118,6 +122,54 @@ class PlayerViewModel @Inject constructor(
         player?.let {
             _uiState.value = _uiState.value.copy(currentPosition = it.currentPosition)
         }
+    }
+
+    /**
+     * Navigate to a referenced episode from a transcript link
+     * @param episodeId The ID of the episode to navigate to
+     */
+    fun navigateToReferencedEpisode(episodeId: String) {
+        viewModelScope.launch {
+            try {
+                // Fetch episode metadata
+                val episode = repository.getPodcastById(episodeId)
+                if (episode == null) {
+                    _navigationError.value = "Referenced episode not found"
+                    return@launch
+                }
+
+                // Check if downloaded (for offline support)
+                val download = repository.getDownload(episode.id)
+                val isDownloaded = download?.localAudioPath != null
+
+                // For offline scenario: if not downloaded, show error
+                // Note: We don't have a network monitor injected, so we'll just attempt to load
+                // If the user is offline and episode not downloaded, the media loading will fail
+                // with appropriate system error handling
+
+                // Save current position before navigating
+                savePosition()
+
+                // Load the referenced episode
+                loadPodcast(episode)
+
+                // Auto-play the referenced episode
+                play()
+
+                // Clear any previous errors
+                _navigationError.value = null
+
+            } catch (e: Exception) {
+                _navigationError.value = "Failed to load episode: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * Clear navigation error state
+     */
+    fun clearNavigationError() {
+        _navigationError.value = null
     }
 
     private fun savePosition() {

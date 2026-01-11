@@ -13,6 +13,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.strollcast.app.ui.components.NoteDialog
 import com.strollcast.app.ui.components.TranscriptLineItem
+import com.strollcast.app.utils.EpisodeUrlParser
 import com.strollcast.app.viewmodels.NoteViewModel
+import com.strollcast.app.viewmodels.PlayerViewModel
 import com.strollcast.app.viewmodels.TranscriptViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
@@ -37,18 +42,29 @@ fun TranscriptScreen(
     currentPosition: Long,
     onSeekTo: (Long) -> Unit,
     viewModel: TranscriptViewModel = hiltViewModel(),
+    playerViewModel: PlayerViewModel = hiltViewModel(),
     noteViewModel: NoteViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val noteUiState by noteViewModel.uiState.collectAsState()
+    val navigationError by playerViewModel.navigationError.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Note dialog state
     var showNoteDialog by remember { mutableStateOf(false) }
     var selectedLineIndex by remember { mutableStateOf<Int?>(null) }
     var selectedLineText by remember { mutableStateOf("") }
+
+    // Show navigation errors via snackbar
+    LaunchedEffect(navigationError) {
+        navigationError?.let { error ->
+            snackbarHostState.showSnackbar(error)
+            playerViewModel.clearNavigationError()
+        }
+    }
 
     // Load transcript when episodeId changes
     LaunchedEffect(episodeId) {
@@ -82,11 +98,17 @@ fun TranscriptScreen(
         }
     }
 
-    Box(
-        modifier = modifier.fillMaxSize()
-    ) {
-        when {
-            uiState.isLoading -> {
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        modifier = modifier
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when {
+                uiState.isLoading -> {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
@@ -159,6 +181,12 @@ fun TranscriptScreen(
                                 selectedLineIndex = index
                                 selectedLineText = cue.text
                                 showNoteDialog = true
+                            },
+                            onLinkClick = { url ->
+                                // Extract episode ID from reference URL and navigate
+                                EpisodeUrlParser.extractEpisodeId(url)?.let { episodeId ->
+                                    playerViewModel.navigateToReferencedEpisode(episodeId)
+                                }
                             }
                         )
                     }
@@ -171,23 +199,24 @@ fun TranscriptScreen(
             }
         }
 
-        // Note dialog
-        NoteDialog(
-            isOpen = showNoteDialog,
-            transcriptText = selectedLineText,
-            onSave = { content ->
-                selectedLineIndex?.let { lineIndex ->
-                    noteViewModel.createNoteByLineIndex(episodeId, lineIndex, content)
+            // Note dialog
+            NoteDialog(
+                isOpen = showNoteDialog,
+                transcriptText = selectedLineText,
+                onSave = { content ->
+                    selectedLineIndex?.let { lineIndex ->
+                        noteViewModel.createNoteByLineIndex(episodeId, lineIndex, content)
+                    }
+                    showNoteDialog = false
+                    selectedLineIndex = null
+                    selectedLineText = ""
+                },
+                onCancel = {
+                    showNoteDialog = false
+                    selectedLineIndex = null
+                    selectedLineText = ""
                 }
-                showNoteDialog = false
-                selectedLineIndex = null
-                selectedLineText = ""
-            },
-            onCancel = {
-                showNoteDialog = false
-                selectedLineIndex = null
-                selectedLineText = ""
-            }
-        )
+            )
+        }
     }
 }
