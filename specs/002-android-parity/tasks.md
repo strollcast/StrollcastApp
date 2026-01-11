@@ -53,9 +53,9 @@
 
 ### Testing
 
-- [ ] T015 [FOUNDATION] Write migration test using MigrationTestHelper to verify v1→v2 schema migration (android/app/src/androidTest/java/com/strollcast/app/data/MigrationTest.kt)
-- [ ] T016 [P] [FOUNDATION] Write unit tests for VttParser with sample VTT content including speaker tags (android/app/src/test/java/com/strollcast/app/util/VttParserTest.kt)
-- [ ] T017 [P] [FOUNDATION] Write unit tests for TimestampConverter covering HH:MM:SS.mmm and MM:SS.mmm formats (android/app/src/test/java/com/strollcast/app/util/TimestampConverterTest.kt)
+- [X] T015 [FOUNDATION] Write migration test using MigrationTestHelper to verify v5→v6 schema migration (android/app/src/androidTest/java/com/strollcast/app/data/MigrationTest.kt)
+- [X] T016 [P] [FOUNDATION] Write unit tests for VttParser with sample VTT content including speaker tags (android/app/src/test/java/com/strollcast/app/util/VttParserTest.kt)
+- [X] T017 [P] [FOUNDATION] Write unit tests for TimestampConverter covering HH:MM:SS.mmm and MM:SS.mmm formats (android/app/src/test/java/com/strollcast/app/util/TimestampConverterTest.kt)
 
 ---
 
