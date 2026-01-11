@@ -2,10 +2,14 @@ package com.strollcast.app.di
 
 import android.content.Context
 import androidx.room.Room
-import com.strollcast.app.data.StrollcastDatabase
-import com.strollcast.app.data.PodcastDao
-import com.strollcast.app.data.PlaybackHistoryDao
+import com.strollcast.app.data.CompletedEpisodeDao
 import com.strollcast.app.data.DownloadDao
+import com.strollcast.app.data.NoteDao
+import com.strollcast.app.data.PlaybackHistoryDao
+import com.strollcast.app.data.PodcastDao
+import com.strollcast.app.data.StrollcastDatabase
+import com.strollcast.app.data.TranscriptDao
+import com.strollcast.app.data.migrations.MIGRATION_5_6
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,6 +29,7 @@ object DatabaseModule {
             StrollcastDatabase::class.java,
             "strollcast_database"
         )
+        .addMigrations(MIGRATION_5_6)
         .fallbackToDestructiveMigration()
         .build()
     }
@@ -42,5 +47,20 @@ object DatabaseModule {
     @Provides
     fun provideDownloadDao(database: StrollcastDatabase): DownloadDao {
         return database.downloadDao()
+    }
+
+    @Provides
+    fun provideTranscriptDao(database: StrollcastDatabase): TranscriptDao {
+        return database.transcriptDao()
+    }
+
+    @Provides
+    fun provideNoteDao(database: StrollcastDatabase): NoteDao {
+        return database.noteDao()
+    }
+
+    @Provides
+    fun provideCompletedEpisodeDao(database: StrollcastDatabase): CompletedEpisodeDao {
+        return database.completedEpisodeDao()
     }
 }

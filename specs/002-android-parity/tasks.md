@@ -27,29 +27,29 @@
 
 ### Database Schema
 
-- [ ] T001 [P] [SETUP] Create TranscriptEntity Room entity with foreign keys and indexes (android/app/src/main/java/com/strollcast/app/models/TranscriptEntity.kt)
-- [ ] T002 [P] [SETUP] Create TranscriptLineEntity Room entity with composite index on (transcriptId, lineNumber) (android/app/src/main/java/com/strollcast/app/models/TranscriptLineEntity.kt)
-- [ ] T003 [P] [SETUP] Create NoteEntity Room entity with indexes on transcriptLineId and (episodeId, createdAt) (android/app/src/main/java/com/strollcast/app/models/NoteEntity.kt)
-- [ ] T004 [P] [SETUP] Create CompletedEpisodeEntity Room entity with DESC index on completedAt (android/app/src/main/java/com/strollcast/app/models/CompletedEpisodeEntity.kt)
-- [ ] T005 [SETUP] Create Migration_1_2 object with CREATE TABLE and CREATE INDEX statements for all 4 new tables (android/app/src/main/java/com/strollcast/app/data/migrations/Migration1To2.kt)
-- [ ] T006 [SETUP] Update StrollcastDatabase to version 2, add new entities to @Database annotation, and register MIGRATION_1_2 (android/app/src/main/java/com/strollcast/app/data/StrollcastDatabase.kt)
+- [X] T001 [P] [SETUP] Create TranscriptEntity Room entity with foreign keys and indexes (android/app/src/main/java/com/strollcast/app/models/TranscriptEntity.kt)
+- [X] T002 [P] [SETUP] Create TranscriptLineEntity Room entity with composite index on (transcriptId, lineNumber) (android/app/src/main/java/com/strollcast/app/models/TranscriptLineEntity.kt)
+- [X] T003 [P] [SETUP] Create NoteEntity Room entity with indexes on transcriptLineId and (episodeId, createdAt) (android/app/src/main/java/com/strollcast/app/models/NoteEntity.kt)
+- [X] T004 [P] [SETUP] Create CompletedEpisodeEntity Room entity with DESC index on completedAt (android/app/src/main/java/com/strollcast/app/models/CompletedEpisodeEntity.kt)
+- [X] T005 [SETUP] Create Migration_1_2 object with CREATE TABLE and CREATE INDEX statements for all 4 new tables (android/app/src/main/java/com/strollcast/app/data/migrations/Migration5To6.kt)
+- [X] T006 [SETUP] Update StrollcastDatabase to version 2, add new entities to @Database annotation, and register MIGRATION_1_2 (android/app/src/main/java/com/strollcast/app/data/StrollcastDatabase.kt)
 
 ### DAO Interfaces
 
-- [ ] T007 [P] [SETUP] Create TranscriptDao with getTranscript, insertTranscript, deleteOldTranscripts, getTranscriptLines, insertTranscriptLines, getCurrentLine queries (android/app/src/main/java/com/strollcast/app/data/TranscriptDao.kt)
-- [ ] T008 [P] [SETUP] Create NoteDao with Flow-based getNotesForEpisode, getNotesForLine, insertNote, updateNote, deleteNote, getNoteCount queries (android/app/src/main/java/com/strollcast/app/data/NoteDao.kt)
-- [ ] T009 [P] [SETUP] Create CompletedEpisodeDao with Flow-based getAllCompletedEpisodes, isEpisodeCompleted, insertCompletedEpisode, removeCompletedEpisode queries (android/app/src/main/java/com/strollcast/app/data/CompletedEpisodeDao.kt)
-- [ ] T010 [SETUP] Add abstract DAO getters (transcriptDao, noteDao, completedEpisodeDao) to StrollcastDatabase (android/app/src/main/java/com/strollcast/app/data/StrollcastDatabase.kt)
+- [X] T007 [P] [SETUP] Create TranscriptDao with getTranscript, insertTranscript, deleteOldTranscripts, getTranscriptLines, insertTranscriptLines, getCurrentLine queries (android/app/src/main/java/com/strollcast/app/data/TranscriptDao.kt)
+- [X] T008 [P] [SETUP] Create NoteDao with Flow-based getNotesForEpisode, getNotesForLine, insertNote, updateNote, deleteNote, getNoteCount queries (android/app/src/main/java/com/strollcast/app/data/NoteDao.kt)
+- [X] T009 [P] [SETUP] Create CompletedEpisodeDao with Flow-based getAllCompletedEpisodes, isEpisodeCompleted, insertCompletedEpisode, removeCompletedEpisode queries (android/app/src/main/java/com/strollcast/app/data/CompletedEpisodeDao.kt)
+- [X] T010 [SETUP] Add abstract DAO getters (transcriptDao, noteDao, completedEpisodeDao) to StrollcastDatabase (android/app/src/main/java/com/strollcast/app/data/StrollcastDatabase.kt)
 
 ### Dependency Injection
 
 - [ ] T011 [SETUP] Create or update RepositoryModule to provide TranscriptRepository, NoteRepository, HistoryRepository with @Singleton scope (android/app/src/main/java/com/strollcast/app/di/RepositoryModule.kt)
-- [ ] T012 [SETUP] Update DatabaseModule to provide new DAOs via database instance (android/app/src/main/java/com/strollcast/app/di/DatabaseModule.kt)
+- [X] T012 [SETUP] Update DatabaseModule to provide new DAOs via database instance (android/app/src/main/java/com/strollcast/app/di/DatabaseModule.kt)
 
 ### Utilities
 
-- [ ] T013 [P] [FOUNDATION] Create VttParser utility with parseVTT method that extracts TranscriptCue list from VTT content (android/app/src/main/java/com/strollcast/app/util/VttParser.kt)
-- [ ] T014 [P] [FOUNDATION] Create TimestampConverter utility with parseTimestamp method to convert VTT timestamps (HH:MM:SS.mmm) to milliseconds (android/app/src/main/java/com/strollcast/app/util/TimestampConverter.kt)
+- [X] T013 [P] [FOUNDATION] Create VttParser utility with parseVTT method that extracts TranscriptCue list from VTT content (android/app/src/main/java/com/strollcast/app/util/VttParser.kt)
+- [X] T014 [P] [FOUNDATION] Create TimestampConverter utility with parseTimestamp method to convert VTT timestamps (HH:MM:SS.mmm) to milliseconds (android/app/src/main/java/com/strollcast/app/util/TimestampConverter.kt)
 
 ### Testing
 
