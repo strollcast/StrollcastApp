@@ -11,11 +11,17 @@ interface TranscriptDao {
     @Query("SELECT * FROM transcripts WHERE id = :episodeId")
     suspend fun getTranscript(episodeId: String): TranscriptEntity?
 
+    @Query("SELECT * FROM transcripts ORDER BY cached_at DESC")
+    suspend fun getAllTranscripts(): List<TranscriptEntity>
+
     @Insert
     suspend fun insertTranscript(transcript: TranscriptEntity)
 
     @Query("DELETE FROM transcripts WHERE cached_at < :cutoffTime")
     suspend fun deleteOldTranscripts(cutoffTime: Long): Int
+
+    @Query("DELETE FROM transcripts WHERE episode_id = :episodeId")
+    suspend fun deleteTranscript(episodeId: String): Int
 
     @Query("SELECT * FROM transcript_lines WHERE transcript_id = :transcriptId ORDER BY line_number ASC")
     suspend fun getTranscriptLines(transcriptId: String): List<TranscriptLineEntity>

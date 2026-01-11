@@ -11,8 +11,20 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/**
+ * Custom exceptions for transcript operations
+ */
+sealed class TranscriptException(message: String) : Exception(message) {
+    class NoUrlProvided(message: String) : TranscriptException(message)
+    class NotFound(message: String) : TranscriptException(message)
+    class NetworkError(message: String) : TranscriptException(message)
+    class ParseError(message: String) : TranscriptException(message)
+    class Timeout(message: String) : TranscriptException(message)
+}
 
 @Singleton
 class TranscriptRepository @Inject constructor(
@@ -22,6 +34,8 @@ class TranscriptRepository @Inject constructor(
     companion object {
         private const val TAG = "TranscriptRepository"
         private const val CACHE_TTL_MS = 30L * 24 * 60 * 60 * 1000 // 30 days
+        private const val MAX_CACHE_SIZE_MB = 10
+        private const val NETWORK_TIMEOUT_MS = 30000L
     }
 
     // Memory cache for active transcript
@@ -44,24 +58,46 @@ class TranscriptRepository @Inject constructor(
                 }
 
                 // 2. Check Room cache
-                transcriptDao.getTranscript(episodeId)?.let { entity ->
+                val cachedEntity = transcriptDao.getTranscript(episodeId)
+                if (cachedEntity != null) {
                     Log.d(TAG, "Transcript found in Room cache for episode: $episodeId")
-                    val cues = VttParser.parseVTT(entity.vttContent)
-                    memoryCache[episodeId] = cues
-                    return@withContext Result.success(cues)
+                    try {
+                        val cues = VttParser.parseVTT(cachedEntity.vttContent)
+                        memoryCache[episodeId] = cues
+                        return@withContext Result.success(cues)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to parse cached VTT content, will re-download", e)
+                        // Continue to network download if cached content is malformed
+                    }
                 }
 
                 // 3. Download from network
                 if (vttUrl.isNullOrBlank()) {
                     Log.w(TAG, "No transcript URL provided for episode: $episodeId")
-                    return@withContext Result.failure(Exception("No transcript URL available"))
+                    return@withContext Result.failure(TranscriptException.NoUrlProvided("Transcript URL not available"))
                 }
 
                 Log.d(TAG, "Downloading transcript from: $vttUrl")
-                val vttContent = downloadVTT(vttUrl)
-                val cues = parseAndCache(episodeId, vttContent)
-
-                Result.success(cues)
+                try {
+                    val vttContent = downloadVTT(vttUrl)
+                    val cues = parseAndCache(episodeId, vttContent)
+                    Result.success(cues)
+                } catch (e: IOException) {
+                    Log.e(TAG, "Network error downloading transcript, checking for stale cache", e)
+                    // Fall back to stale cached data if network fails
+                    cachedEntity?.let {
+                        try {
+                            val cues = VttParser.parseVTT(it.vttContent)
+                            memoryCache[episodeId] = cues
+                            Log.d(TAG, "Using stale cached transcript for episode: $episodeId")
+                            return@withContext Result.success(cues)
+                        } catch (parseError: Exception) {
+                            Log.e(TAG, "Stale cache is also malformed", parseError)
+                        }
+                    }
+                    // No cache available, return network error
+                    Result.failure(TranscriptException.NetworkError("Failed to download transcript: ${e.message}"))
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error getting transcript for episode: $episodeId", e)
                 Result.failure(e)
@@ -74,21 +110,42 @@ class TranscriptRepository @Inject constructor(
      *
      * @param url VTT file URL
      * @return VTT file content as string
-     * @throws IOException if download fails
+     * @throws TranscriptException.NotFound if 404 response
+     * @throws TranscriptException.Timeout if request times out
+     * @throws TranscriptException.NetworkError for other network errors
      */
     private suspend fun downloadVTT(url: String): String {
         return withContext(Dispatchers.IO) {
-            val request = Request.Builder()
-                .url(url)
-                .build()
+            try {
+                val client = okHttpClient.newBuilder()
+                    .readTimeout(NETWORK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                    .connectTimeout(NETWORK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                    .build()
 
-            val response = okHttpClient.newCall(request).execute()
+                val request = Request.Builder()
+                    .url(url)
+                    .build()
 
-            if (!response.isSuccessful) {
-                throw IOException("HTTP ${response.code}: ${response.message}")
+                val response = client.newCall(request).execute()
+
+                when (response.code) {
+                    404 -> throw TranscriptException.NotFound("Transcript not found at URL: $url")
+                    in 400..499 -> throw TranscriptException.NetworkError("Client error ${response.code}: ${response.message}")
+                    in 500..599 -> throw TranscriptException.NetworkError("Server error ${response.code}: ${response.message}")
+                }
+
+                if (!response.isSuccessful) {
+                    throw TranscriptException.NetworkError("HTTP ${response.code}: ${response.message}")
+                }
+
+                response.body?.string() ?: throw TranscriptException.NetworkError("Empty response body")
+            } catch (e: java.net.SocketTimeoutException) {
+                throw TranscriptException.Timeout("Request timed out after ${NETWORK_TIMEOUT_MS}ms")
+            } catch (e: TranscriptException) {
+                throw e // Re-throw our custom exceptions
+            } catch (e: IOException) {
+                throw TranscriptException.NetworkError("Network error: ${e.message}")
             }
-
-            response.body?.string() ?: throw IOException("Empty response body")
         }
     }
 
@@ -98,11 +155,25 @@ class TranscriptRepository @Inject constructor(
      * @param episodeId Episode ID
      * @param vttContent Raw VTT file content
      * @return List of parsed TranscriptCue objects
+     * @throws TranscriptException.ParseError if VTT content is malformed
      */
     private suspend fun parseAndCache(episodeId: String, vttContent: String): List<TranscriptCue> {
         return withContext(Dispatchers.IO) {
             // Parse VTT content
-            val cues = VttParser.parseVTT(vttContent)
+            val cues = try {
+                VttParser.parseVTT(vttContent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to parse VTT content for episode: $episodeId", e)
+                throw TranscriptException.ParseError("Invalid VTT format: ${e.message}")
+            }
+
+            if (cues.isEmpty()) {
+                Log.w(TAG, "Parsed VTT has no cues for episode: $episodeId")
+                throw TranscriptException.ParseError("Transcript contains no content")
+            }
+
+            // Check cache size and evict if necessary
+            checkAndEvictCache()
 
             // Cache in Room
             val transcriptEntity = TranscriptEntity(
@@ -132,6 +203,41 @@ class TranscriptRepository @Inject constructor(
             Log.d(TAG, "Cached transcript for episode: $episodeId (${cues.size} cues)")
 
             cues
+        }
+    }
+
+    /**
+     * Check total cache size and evict oldest transcripts if exceeding MAX_CACHE_SIZE_MB
+     * Uses LRU (Least Recently Used) eviction strategy based on cachedAt timestamp
+     */
+    private suspend fun checkAndEvictCache() {
+        return withContext(Dispatchers.IO) {
+            val allTranscripts = transcriptDao.getAllTranscripts()
+            val totalSizeBytes = allTranscripts.sumOf { it.vttContent.toByteArray().size.toLong() }
+            val totalSizeMB = totalSizeBytes / (1024 * 1024)
+
+            if (totalSizeMB > MAX_CACHE_SIZE_MB) {
+                Log.d(TAG, "Cache size ${totalSizeMB}MB exceeds limit ${MAX_CACHE_SIZE_MB}MB, evicting oldest")
+
+                // Sort by cachedAt (oldest first) and evict until under limit
+                val sortedByAge = allTranscripts.sortedBy { it.cachedAt }
+                var currentSize = totalSizeMB
+                var evicted = 0
+
+                for (transcript in sortedByAge) {
+                    if (currentSize <= MAX_CACHE_SIZE_MB * 0.8) break // Leave 20% buffer
+
+                    val transcriptSize = transcript.vttContent.toByteArray().size / (1024 * 1024)
+                    transcriptDao.deleteTranscript(transcript.episodeId)
+                    currentSize -= transcriptSize
+                    evicted++
+
+                    // Remove from memory cache too
+                    memoryCache.remove(transcript.episodeId)
+                }
+
+                Log.d(TAG, "Evicted $evicted transcripts, cache size now ${currentSize}MB")
+            }
         }
     }
 
