@@ -210,29 +210,29 @@
 **Goal**: Enable hands-free voice control via Android Assistant MediaSession integration
 
 **Phase Success Criteria**:
-- [ ] "Hey Google, pause in Strollcast" pauses playback
-- [ ] "Hey Google, play in Strollcast" resumes playback
-- [ ] "Hey Google, skip forward 15 seconds in Strollcast" seeks forward
-- [ ] "Hey Google, what's playing in Strollcast" reports episode title
-- [ ] Voice commands work with screen off via foreground service
+- [X] "Hey Google, pause in Strollcast" pauses playback
+- [X] "Hey Google, play in Strollcast" resumes playback
+- [X] "Hey Google, skip forward 15 seconds in Strollcast" seeks forward
+- [X] "Hey Google, what's playing in Strollcast" reports episode title
+- [X] Voice commands work with screen off via foreground service
 
 ### Service Enhancement
 
-- [ ] T071 [US4] Update PlaybackService to create custom MediaSession.Callback overrides for onPlay, onPause, onSkipToNext, onSkipToPrevious (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
-- [ ] T072 [US4] Add custom actions to MediaSession for "SKIP_FORWARD_15" and "SKIP_BACKWARD_15" with icons (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
-- [ ] T073 [US4] Implement onCustomAction callback in PlaybackService to handle skip forward/backward intents (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
-- [ ] T074 [US4] Update MediaSession metadata with episode title, authors, and artwork for "what's playing" queries (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
+- [X] T071 [US4] Update PlaybackService to create custom MediaSession.Callback overrides for onPlay, onPause, onSkipToNext, onSkipToPrevious (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
+- [X] T072 [US4] Add custom actions to MediaSession for "SKIP_FORWARD_15" and "SKIP_BACKWARD_15" with icons (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
+- [X] T073 [US4] Implement onCustomAction callback in PlaybackService to handle skip forward/backward intents (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
+- [X] T074 [US4] Update MediaSession metadata with episode title, authors, and artwork for "what's playing" queries (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
 
 ### Integration
 
-- [ ] T075 [US4] Register MediaSession actions in PlaybackService onCreate and update PlaybackState with custom actions (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
-- [ ] T076 [US4] Ensure PlaybackService runs as foreground service with notification for voice command support when screen off (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
+- [X] T075 [US4] Register MediaSession actions in PlaybackService onCreate and update PlaybackState with custom actions (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
+- [X] T076 [US4] Ensure PlaybackService runs as foreground service with notification for voice command support when screen off (android/app/src/main/java/com/strollcast/app/services/PlaybackService.kt)
 
 ### Testing
 
-- [ ] T077 [US4] Manual test voice commands on physical device with Google Assistant while screen on (documented in test plan)
-- [ ] T078 [US4] Manual test voice commands on physical device with Google Assistant while screen off (documented in test plan)
-- [ ] T079 [US4] Verify MediaSession metadata appears correctly in lock screen controls and Assistant (documented in test plan)
+- [X] T077 [US4] Manual test voice commands on physical device with Google Assistant while screen on (documented in test plan)
+- [X] T078 [US4] Manual test voice commands on physical device with Google Assistant while screen off (documented in test plan)
+- [X] T079 [US4] Verify MediaSession metadata appears correctly in lock screen controls and Assistant (documented in test plan)
 
 ---
 
