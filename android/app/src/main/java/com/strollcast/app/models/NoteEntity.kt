@@ -12,13 +12,13 @@ import androidx.room.PrimaryKey
         ForeignKey(
             entity = TranscriptLineEntity::class,
             parentColumns = ["id"],
-            childColumns = ["transcriptLineId"],
+            childColumns = ["transcript_line_id"],
             onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["transcriptLineId"]),
-        Index(value = ["episodeId", "createdAt"])
+        Index(value = ["transcript_line_id"]),
+        Index(value = ["episode_id", "created_at"])
     ]
 )
 data class NoteEntity(

@@ -12,7 +12,7 @@ import androidx.room.PrimaryKey
         ForeignKey(
             entity = Podcast::class,
             parentColumns = ["id"],
-            childColumns = ["episodeId"],
+            childColumns = ["episode_id"],
             onDelete = ForeignKey.CASCADE
         )
     ],
