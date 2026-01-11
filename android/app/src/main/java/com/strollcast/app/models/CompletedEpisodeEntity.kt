@@ -17,6 +17,7 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
+        Index(value = ["episode_id"]),
         Index(value = ["completed_at"], orders = [Index.Order.DESC])
     ]
 )

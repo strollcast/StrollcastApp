@@ -36,7 +36,7 @@ class StrollcastApplication : Application(), Configuration.Provider {
     private fun scheduleBackgroundTasks() {
         val constraints = Constraints.Builder()
             .setRequiresBatteryNotLow(true) // Only run when battery is not low
-            .setNetworkType(NetworkType.NOT_REQUIRED) // No network needed for cleanup
+            .setRequiredNetworkType(NetworkType.NOT_REQUIRED) // No network needed for cleanup
             .build()
 
         // Daily transcript cleanup

@@ -9,14 +9,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.android.EntryPointAccessors
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.strollcast.app.di.RepositoryModule
 import com.strollcast.app.models.Podcast
 import com.strollcast.app.repository.PodcastRepository
 import com.strollcast.app.ui.components.CompletedEpisodeCard
 import com.strollcast.app.viewmodels.PlayedViewModel
-import dagger.hilt.android.EntryPoint
+import dagger.hilt.EntryPoint
+import dagger.hilt.EntryPointAccessors
+import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
 import kotlinx.coroutines.launch
 
@@ -24,6 +25,7 @@ import kotlinx.coroutines.launch
  * Entry point for accessing PodcastRepository in Compose
  */
 @EntryPoint
+@InstallIn(ActivityComponent::class)
 interface PodcastRepositoryEntryPoint {
     fun podcastRepository(): PodcastRepository
 }

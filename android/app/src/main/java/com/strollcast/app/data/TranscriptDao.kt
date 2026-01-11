@@ -20,7 +20,7 @@ interface TranscriptDao {
     @Query("DELETE FROM transcripts WHERE cached_at < :cutoffTime")
     suspend fun deleteOldTranscripts(cutoffTime: Long): Int
 
-    @Query("DELETE FROM transcripts WHERE episode_id = :episodeId")
+    @Query("DELETE FROM transcripts WHERE episodeId = :episodeId")
     suspend fun deleteTranscript(episodeId: String): Int
 
     @Query("SELECT * FROM transcript_lines WHERE transcript_id = :transcriptId ORDER BY line_number ASC")
