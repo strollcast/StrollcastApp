@@ -104,9 +104,9 @@
 
 ### Testing
 
-- [ ] T035 [US1] Write TranscriptDao instrumentation tests using in-memory database for insert/query operations (android/app/src/androidTest/java/com/strollcast/app/data/TranscriptDaoTest.kt)
-- [ ] T036 [US1] Write TranscriptRepository unit tests with mocked DAO and OkHttpClient for caching logic (android/app/src/test/java/com/strollcast/app/repository/TranscriptRepositoryTest.kt)
-- [ ] T037 [US1] Write Compose UI test for TranscriptScreen verifying tap-to-seek triggers callback with correct timestamp (android/app/src/androidTest/java/com/strollcast/app/ui/screens/TranscriptScreenTest.kt)
+- [X] T035 [US1] Write TranscriptDao instrumentation tests using in-memory database for insert/query operations (android/app/src/androidTest/java/com/strollcast/app/data/TranscriptDaoTest.kt)
+- [X] T036 [US1] Write TranscriptRepository unit tests with mocked DAO and OkHttpClient for caching logic (android/app/src/test/java/com/strollcast/app/repository/TranscriptRepositoryTest.kt)
+- [X] T037 [US1] Write Compose UI test for TranscriptScreen verifying tap-to-seek triggers callback with correct timestamp (android/app/src/androidTest/java/com/strollcast/app/ui/screens/TranscriptScreenTest.kt)
 
 ---
 
