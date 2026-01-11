@@ -26,7 +26,10 @@ fun PlayerScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Player", "Transcript")
+
+    // Only show transcript tab if transcript URL is available
+    val hasTranscript = uiState.currentPodcast?.transcriptUrl != null
+    val tabs = if (hasTranscript) listOf("Player", "Transcript") else listOf("Player")
 
     // Create and set up ExoPlayer
     DisposableEffect(Unit) {
@@ -89,27 +92,61 @@ fun PlayerScreen(
                     .padding(padding)
             )
             1 -> {
-                if (uiState.currentPodcast != null) {
-                    TranscriptScreen(
-                        episodeId = uiState.currentPodcast!!.id,
-                        transcriptUrl = uiState.currentPodcast!!.transcriptUrl,
-                        currentPosition = uiState.currentPosition,
-                        onSeekTo = { position -> viewModel.seekTo(position) },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No episode selected",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                when {
+                    uiState.currentPodcast == null -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No episode selected",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    uiState.currentPodcast!!.transcriptUrl == null -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Info,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Transcript Not Available",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "This episode does not have a transcript",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                    else -> {
+                        TranscriptScreen(
+                            episodeId = uiState.currentPodcast!!.id,
+                            transcriptUrl = uiState.currentPodcast!!.transcriptUrl,
+                            currentPosition = uiState.currentPosition,
+                            onSeekTo = { position -> viewModel.seekTo(position) },
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding)
                         )
                     }
                 }
