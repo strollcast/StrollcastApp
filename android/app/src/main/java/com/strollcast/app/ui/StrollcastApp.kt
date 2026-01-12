@@ -23,7 +23,7 @@ import com.strollcast.app.ui.screens.PlayerScreen
 import com.strollcast.app.ui.screens.SettingsScreen
 
 sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    object Podcasts : Screen("podcasts", "Podcasts", Icons.Filled.Home)
+    object Podcasts : Screen("podcasts", "Strolls", Icons.Filled.Home)
     object Played : Screen("played", "Played", Icons.Filled.CheckCircle)
     object Player : Screen("player", "Player", Icons.Filled.PlayCircle) {
         fun createRoute(podcastId: String) = "player/$podcastId"
@@ -31,7 +31,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
     object Notes : Screen("notes", "Notes", Icons.Filled.StickyNote2) {
         fun createRoute(episodeId: String? = null) = if (episodeId != null) "notes/$episodeId" else "notes"
     }
-    object Settings : Screen("settings", "Settings", Icons.Filled.Settings)
+    object Settings : Screen("settings", "", Icons.Filled.Settings)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

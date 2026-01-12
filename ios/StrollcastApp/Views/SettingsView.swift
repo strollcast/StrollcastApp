@@ -1,5 +1,21 @@
 import SwiftUI
 
+struct VoiceCommand {
+    let phrases: [String]
+    let description: String
+}
+
+private let voiceCommands: [VoiceCommand] = [
+    VoiceCommand(
+        phrases: ["play reference", "jump to reference"],
+        description: "Navigate to the episode referenced in the current transcript segment"
+    ),
+    VoiceCommand(
+        phrases: ["play previous", "jump to previous"],
+        description: "Return to the previous episode in your listening history"
+    )
+]
+
 struct SettingsView: View {
     @StateObject private var zoteroService = ZoteroService.shared
     @StateObject private var downloadManager = DownloadManager.shared
@@ -163,6 +179,24 @@ struct SettingsView: View {
                     Text("Storage")
                 } footer: {
                     Text("Downloaded episodes and transcripts are stored locally for offline playback.")
+                        .font(.caption)
+                }
+
+                Section {
+                    ForEach(voiceCommands, id: \.phrases.first) { command in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(command.phrases.joined(separator: " or "))
+                                .font(.headline)
+                            Text(command.description)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                } header: {
+                    Text("Voice Commands")
+                } footer: {
+                    Text("Use these voice commands with Siri for hands-free navigation.")
                         .font(.caption)
                 }
             }

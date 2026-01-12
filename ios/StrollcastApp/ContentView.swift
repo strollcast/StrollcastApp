@@ -6,7 +6,7 @@ struct ContentView: View {
             TabView {
                 PodcastListView()
                     .tabItem {
-                        Label("Podcasts", systemImage: "headphones")
+                        Label("Strolls", systemImage: "headphones")
                     }
 
                 PlayedListView()
@@ -21,7 +21,7 @@ struct ContentView: View {
 
                 SettingsView()
                     .tabItem {
-                        Label("Settings", systemImage: "gear")
+                        Image(systemName: "gear")
                     }
             }
 
