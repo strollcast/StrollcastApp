@@ -79,13 +79,17 @@ val voiceCommands = listOf(
 
 Current voice commands (from feature 004):
 
+**NOTE**: "jump" variations require verification on iOS before documenting. See plan.md "Prerequisites & Voice Command Verification" section.
+
 1. **Play Reference**
-   - Phrases: "play reference", "jump to reference"
+   - Phrases: "play reference" (verified), "jump to reference" (iOS support needs verification)
    - Description: "Navigate to the episode referenced in the current transcript segment"
 
 2. **Play Previous**
-   - Phrases: "play previous", "jump to previous"
+   - Phrases: "play previous" (verified), "jump to previous" (iOS support needs verification)
    - Description: "Return to the previous episode in your listening history"
+
+**Implementation Note**: Only document command variations that work on BOTH platforms. If iOS doesn't support "jump", either implement it first or document only "play" variations.
 
 ## Constraints
 

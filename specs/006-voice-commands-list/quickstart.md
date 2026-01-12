@@ -10,6 +10,12 @@
 - Feature 004 (voice-reference-navigation) merged and working
 - Familiarity with SwiftUI (iOS) and Jetpack Compose (Android)
 
+**CRITICAL**: Before implementing, verify iOS voice command support for "jump" variations:
+- Check iOS voice command handler code
+- Test with Siri: "Hey Siri, jump to reference" and "Hey Siri, jump to previous"
+- If not supported, either implement "jump" support first OR document only "play" variations
+- See plan.md "Prerequisites & Voice Command Verification" for details
+
 ## iOS Implementation (SettingsView.swift)
 
 ### Step 1: Locate the Settings View
@@ -28,13 +34,15 @@ struct VoiceCommand {
     let description: String
 }
 
+// NOTE: Verify "jump" variations work on iOS before documenting them
+// If "jump" not supported, use only ["play reference"] and ["play previous"]
 private let voiceCommands: [VoiceCommand] = [
     VoiceCommand(
-        phrases: ["play reference", "jump to reference"],
+        phrases: ["play reference", "jump to reference"],  // TODO: Verify "jump" works
         description: "Navigate to the episode referenced in the current transcript segment"
     ),
     VoiceCommand(
-        phrases: ["play previous", "jump to previous"],
+        phrases: ["play previous", "jump to previous"],    // TODO: Verify "jump" works
         description: "Return to the previous episode in your listening history"
     )
 ]

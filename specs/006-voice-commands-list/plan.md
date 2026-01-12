@@ -143,6 +143,46 @@ While respecting platform differences, both should present:
 - **Feature 004 (voice-reference-navigation)**: Provides the actual commands being documented
 - **Existing Settings screens**: Must integrate into current Settings UI structure
 
+## Prerequisites & Voice Command Verification
+
+**IMPORTANT**: Before documenting voice commands in Settings, we must verify what commands are actually supported on each platform.
+
+### iOS Voice Command Support Verification
+
+**Issue**: The specification documents "jump to reference" and "jump to previous" as alternative commands, but iOS implementation may only support "play" and "go to" variations.
+
+**Verification Required**:
+1. Check iOS voice command handler implementation (likely in Shortcuts, Siri integration, or VoiceCommandHandler)
+2. Determine which command variations are actually recognized:
+   - ✓ "play reference"
+   - ✓ "play previous"
+   - ? "jump to reference"
+   - ? "jump to previous"
+   - ? "go to reference"
+   - ? "go to previous"
+
+**Action Items** (to be included in tasks.md):
+- **Task: Verify iOS voice command support**
+  - Review iOS voice command handler code
+  - Test actual Siri command recognition
+  - Document which variations work
+
+- **Task: Implement "jump" variations on iOS (if needed)**
+  - If "jump to reference" and "jump to previous" are not currently supported
+  - Add these variations to iOS voice command parser/handler
+  - Test with Siri to verify recognition
+  - Ensure parity with Android MediaSession commands
+
+- **Task: Update command documentation based on verification**
+  - Only document commands that actually work on both platforms
+  - If platforms differ, document platform-specific differences in Settings
+  - Ensure cross-platform consistency where possible
+
+**Decision**: Do not display "jump" variations in Settings help until verified to work on iOS. If unverified, either:
+1. Implement "jump" support on iOS first, OR
+2. Document only "play" variations initially, OR
+3. Document platform differences explicitly ("iOS: play, Android: play/jump")
+
 ## Testing Strategy
 
 Manual testing checklist:
