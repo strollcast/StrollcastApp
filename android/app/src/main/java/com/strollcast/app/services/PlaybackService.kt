@@ -137,51 +137,6 @@ class PlaybackService : MediaSessionService() {
             }
             return super.onCustomCommand(session, controller, customCommand, args)
         }
-
-        override fun onPlayFromSearch(
-            session: MediaSession,
-            controller: MediaSession.ControllerInfo,
-            query: String,
-            extras: Bundle
-        ): ListenableFuture<SessionResult> {
-            scope.launch {
-                try {
-                    handleVoiceQuery(query)
-                } catch (e: Exception) {
-                    // On unexpected error, provide help message
-                    audioFeedback.speak(FeedbackMessages.HELP_MESSAGE, FeedbackPriority.HIGH)
-                }
-            }
-            return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
-        }
-    }
-
-    private suspend fun handleVoiceQuery(query: String) {
-        val command = VoiceCommandParser.parse(query)
-
-        when (command.type) {
-            CommandType.PLAY_REFERENCE -> {
-                sendVoiceCommand(VoiceCommandType.PLAY_REFERENCE)
-            }
-            CommandType.PLAY_PREVIOUS -> {
-                sendVoiceCommand(VoiceCommandType.PLAY_PREVIOUS)
-            }
-            CommandType.SEEK_TO_TIMESTAMP -> {
-                val timestampMs = command.parameters["timestamp_ms"]?.toLongOrNull()
-                if (timestampMs != null && timestampMs >= 0) {
-                    player.seekTo(timestampMs)
-                    val minutes = timestampMs / 60000
-                    val seconds = (timestampMs % 60000) / 1000
-                    audioFeedback.speak(FeedbackMessages.seekingTo(minutes, seconds))
-                } else {
-                    audioFeedback.speak(FeedbackMessages.INVALID_TIMESTAMP)
-                }
-            }
-            CommandType.UNKNOWN -> {
-                // Provide help message for unrecognized commands
-                audioFeedback.speak(FeedbackMessages.HELP_MESSAGE)
-            }
-        }
     }
 
     private fun sendVoiceCommand(type: VoiceCommandType) {
