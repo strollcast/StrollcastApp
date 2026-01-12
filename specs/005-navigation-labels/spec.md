@@ -5,6 +5,8 @@
 **Status**: Draft
 **Input**: User description: "The labels in the menu at the bottom don't fit. Change both the ios and android applications to use 'Strolls' instead of 'Podcasts'. Remove the 'Settings' label, unless there is a shorter alternative for it."
 
+**Scope Note**: This feature updates ONLY the visible UI labels in the bottom navigation bar. All internal code (class names, variables, file names, API references, data models) will continue to use "Podcast" terminology. This is purely a cosmetic UI change to address space constraints.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Rename "Podcasts" to "Strolls" (Priority: P1)
@@ -50,18 +52,21 @@ Users see either an icon-only Settings tab or a shortened label like "Gear" that
 
 ## Requirements *(mandatory)*
 
+**Important**: These requirements affect ONLY the visible UI labels in the navigation bar. All internal code references (PodcastViewModel, PodcastRepository, PodcastService, etc.) remain unchanged.
+
 ### Functional Requirements
 
-- **FR-001**: iOS app MUST display "Strolls" as the label for the podcast list tab instead of "Podcasts"
-- **FR-002**: Android app MUST display "Strolls" as the label for the podcast list tab instead of "Podcasts"
-- **FR-003**: iOS app MUST display the Settings tab with icon only (no text label)
-- **FR-004**: Android app MUST display the Settings tab with icon only (no text label)
+- **FR-001**: iOS app MUST display "Strolls" as the visible label for the podcast list tab instead of "Podcasts"
+- **FR-002**: Android app MUST display "Strolls" as the visible label for the podcast list tab instead of "Podcasts"
+- **FR-003**: iOS app MUST display the Settings tab with icon only (no visible text label)
+- **FR-004**: Android app MUST display the Settings tab with icon only (no visible text label)
 - **FR-005**: Tapping the "Strolls" tab MUST navigate to the podcast list screen on both platforms
 - **FR-006**: Tapping the Settings icon MUST navigate to the Settings screen on both platforms
 - **FR-007**: Screen readers MUST announce "Strolls" for the podcast list tab
 - **FR-008**: Screen readers MUST announce "Settings" for the settings tab even without visible label
 - **FR-009**: Tab selection state MUST be visually indicated for the active tab
 - **FR-010**: All other tabs (Played, Notes) MUST remain unchanged
+- **FR-011**: Internal code (classes, variables, files) MUST NOT be renamed from "Podcast" to "Stroll"
 
 ### Key Entities
 
@@ -92,12 +97,14 @@ Users see either an icon-only Settings tab or a shortened label like "Gear" that
 
 ## Out of Scope
 
-- Renaming internal code references (class names, variables, file names) from "Podcast" to "Stroll"
-- Changing terminology elsewhere in the app (screen titles, API references, data models)
-- Updating app store listings or marketing materials
-- Localization/internationalization of the new "Strolls" label
-- Redesigning tab icons or navigation bar styling
-- Adding new tabs or reordering existing tabs
+**Explicitly NOT included** in this feature:
+
+- **Renaming internal code**: All classes, variables, files, and methods will continue to use "Podcast" terminology (e.g., PodcastViewModel, PodcastRepository, PodcastService, PodcastDao, PodcastListScreen, etc.)
+- **Changing terminology elsewhere in the app**: Screen titles, error messages, API references, data models, database tables remain unchanged
+- **Updating app store listings or marketing materials**: App Store/Play Store descriptions unaffected
+- **Localization/internationalization**: The new "Strolls" label will be English-only initially
+- **Redesigning tab icons or navigation bar styling**: Only text labels change, icons and styling remain the same
+- **Adding new tabs or reordering existing tabs**: Navigation structure stays identical
 
 ## Assumptions
 
