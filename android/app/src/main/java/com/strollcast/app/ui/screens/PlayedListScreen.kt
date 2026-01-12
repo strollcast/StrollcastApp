@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  * Entry point for accessing PodcastRepository in Compose
  */
 @EntryPoint
-@InstallIn(ActivityComponent::class)
+@InstallIn(dagger.hilt.components.SingletonComponent::class)
 interface PodcastRepositoryEntryPoint {
     fun podcastRepository(): PodcastRepository
 }

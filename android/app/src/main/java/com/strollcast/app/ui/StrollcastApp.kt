@@ -52,12 +52,16 @@ fun StrollcastApp() {
                         label = { Text(screen.title) },
                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                         onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                            // Check if already on this screen
+                            if (currentDestination?.hierarchy?.any { it.route == screen.route } != true) {
+                                navController.navigate(screen.route) {
+                                    // Pop everything up to the start destination
+                                    popUpTo(Screen.Podcasts.route) {
+                                        inclusive = false
+                                    }
+                                    // Avoid multiple copies of the same destination
+                                    launchSingleTop = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     )

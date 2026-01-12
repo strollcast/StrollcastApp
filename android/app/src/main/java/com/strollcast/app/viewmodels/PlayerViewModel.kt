@@ -303,14 +303,11 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun releaseController() {
-        controller?.removeListener(playerListener)
-        controller?.release()
-        controller = null
-    }
-
     override fun onCleared() {
         savePosition()
+        // Don't release controller - it should persist across screen navigations
+        // Audio keeps playing even when navigating away from player screen
+        controller?.removeListener(playerListener)
         super.onCleared()
     }
 }

@@ -30,6 +30,7 @@ fun PlayerScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var selectedTabIndex by remember { mutableStateOf(0) }
+    var controllerReady by remember { mutableStateOf(false) }
 
     // Only show transcript tab if transcript URL is available
     val hasTranscript = uiState.currentPodcast?.transcriptUrl != null
@@ -49,19 +50,21 @@ fun PlayerScreen(
             {
                 val controller = controllerFuture.get()
                 viewModel.setController(controller)
+                controllerReady = true
             },
             MoreExecutors.directExecutor()
         )
 
         onDispose {
-            viewModel.releaseController()
+            // Don't release the controller - audio should keep playing when navigating away
+            // Only remove the listener to prevent memory leaks
             MediaController.releaseFuture(controllerFuture)
         }
     }
 
-    // Load podcast when screen opens with podcast ID
-    LaunchedEffect(podcastId) {
-        if (podcastId != null) {
+    // Load podcast when screen opens with podcast ID AND controller is ready
+    LaunchedEffect(podcastId, controllerReady) {
+        if (podcastId != null && controllerReady) {
             viewModel.loadPodcastById(podcastId)
         }
     }

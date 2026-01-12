@@ -79,6 +79,13 @@ class PlaybackService : MediaSessionService() {
             .setHandleAudioBecomingNoisy(true)
             .build()
 
+        // Add listener to log playback state changes
+        player.addListener(object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                android.util.Log.d("PlaybackService", "Player isPlaying changed: $isPlaying")
+            }
+        })
+
         // Create MediaSession with custom callback
         val sessionActivityPendingIntent = PendingIntent.getActivity(
             this,
@@ -105,6 +112,7 @@ class PlaybackService : MediaSessionService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo
         ): MediaSession.ConnectionResult {
+            android.util.Log.d("PlaybackService", "MediaSession onConnect from: ${controller.packageName}")
             val connectionResult = super.onConnect(session, controller)
 
             // Add custom commands for skip forward/backward
