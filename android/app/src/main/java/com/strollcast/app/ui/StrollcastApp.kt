@@ -38,7 +38,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
 @Composable
 fun StrollcastApp() {
     val navController = rememberNavController()
-    val items = listOf(Screen.Podcasts, Screen.Played, Screen.Player, Screen.Notes, Screen.Settings)
+    val items = listOf(Screen.Podcasts, Screen.Played, Screen.Notes, Screen.Settings)
 
     Scaffold(
         bottomBar = {
