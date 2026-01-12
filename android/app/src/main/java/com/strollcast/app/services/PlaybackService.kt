@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -23,19 +24,38 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.strollcast.app.MainActivity
 import com.strollcast.app.R
+import com.strollcast.app.utils.AudioFeedbackManager
+import com.strollcast.app.utils.CommandType
+import com.strollcast.app.utils.FeedbackMessages
+import com.strollcast.app.utils.VoiceCommandParser
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
     private lateinit var player: ExoPlayer
+    private lateinit var audioFeedback: AudioFeedbackManager
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     companion object {
         private const val CHANNEL_ID = "playback_channel"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_SKIP_FORWARD = "com.strollcast.app.SKIP_FORWARD_15"
         private const val ACTION_SKIP_BACKWARD = "com.strollcast.app.SKIP_BACKWARD_15"
+
+        // Voice command constants
+        const val ACTION_VOICE_COMMAND = "com.strollcast.app.VOICE_COMMAND"
+        const val EXTRA_COMMAND_TYPE = "command_type"
+    }
+
+    enum class VoiceCommandType {
+        PLAY_REFERENCE,
+        PLAY_PREVIOUS
     }
 
     override fun onCreate() {
@@ -43,6 +63,9 @@ class PlaybackService : MediaSessionService() {
 
         // Create notification channel for foreground service
         createNotificationChannel()
+
+        // Initialize AudioFeedbackManager for voice commands
+        audioFeedback = AudioFeedbackManager(this)
 
         // Initialize ExoPlayer
         player = ExoPlayer.Builder(this)
@@ -114,6 +137,58 @@ class PlaybackService : MediaSessionService() {
             }
             return super.onCustomCommand(session, controller, customCommand, args)
         }
+
+        override fun onPlayFromSearch(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            query: String,
+            extras: Bundle
+        ): ListenableFuture<SessionResult> {
+            scope.launch {
+                try {
+                    handleVoiceQuery(query)
+                } catch (e: Exception) {
+                    // On unexpected error, provide help message
+                    audioFeedback.speak(FeedbackMessages.HELP_MESSAGE, FeedbackPriority.HIGH)
+                }
+            }
+            return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+        }
+    }
+
+    private suspend fun handleVoiceQuery(query: String) {
+        val command = VoiceCommandParser.parse(query)
+
+        when (command.type) {
+            CommandType.PLAY_REFERENCE -> {
+                sendVoiceCommand(VoiceCommandType.PLAY_REFERENCE)
+            }
+            CommandType.PLAY_PREVIOUS -> {
+                sendVoiceCommand(VoiceCommandType.PLAY_PREVIOUS)
+            }
+            CommandType.SEEK_TO_TIMESTAMP -> {
+                val timestampMs = command.parameters["timestamp_ms"]?.toLongOrNull()
+                if (timestampMs != null && timestampMs >= 0) {
+                    player.seekTo(timestampMs)
+                    val minutes = timestampMs / 60000
+                    val seconds = (timestampMs % 60000) / 1000
+                    audioFeedback.speak(FeedbackMessages.seekingTo(minutes, seconds))
+                } else {
+                    audioFeedback.speak(FeedbackMessages.INVALID_TIMESTAMP)
+                }
+            }
+            CommandType.UNKNOWN -> {
+                // Provide help message for unrecognized commands
+                audioFeedback.speak(FeedbackMessages.HELP_MESSAGE)
+            }
+        }
+    }
+
+    private fun sendVoiceCommand(type: VoiceCommandType) {
+        val intent = Intent(ACTION_VOICE_COMMAND).apply {
+            putExtra(EXTRA_COMMAND_TYPE, type.name)
+        }
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 
     /**
@@ -187,6 +262,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        audioFeedback.shutdown()
         mediaSession?.run {
             player.release()
             release()

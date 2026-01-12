@@ -34,7 +34,12 @@ class PlayerViewModel @Inject constructor(
     private val _navigationError = MutableStateFlow<String?>(null)
     val navigationError: StateFlow<String?> = _navigationError.asStateFlow()
 
+    // Voice command feedback state
+    private val _voiceCommandFeedback = MutableStateFlow<String?>(null)
+    val voiceCommandFeedback: StateFlow<String?> = _voiceCommandFeedback.asStateFlow()
+
     private var player: Player? = null
+    private var transcriptViewModel: TranscriptViewModel? = null
 
     fun setPlayer(player: Player) {
         this.player = player
@@ -198,6 +203,81 @@ class PlayerViewModel @Inject constructor(
                     episodeDuration = duration
                 )
             }
+        }
+    }
+
+    fun setTranscriptViewModel(viewModel: TranscriptViewModel) {
+        this.transcriptViewModel = viewModel
+    }
+
+    /**
+     * Play the first reference found in current transcript segment
+     * Called by voice command "play reference"
+     */
+    fun playNextReference() {
+        viewModelScope.launch {
+            try {
+                val currentPodcast = _uiState.value.currentPodcast
+                if (currentPodcast == null) {
+                    _voiceCommandFeedback.value = "No episode playing"
+                    return@launch
+                }
+
+                val currentPosition = player?.currentPosition ?: run {
+                    _voiceCommandFeedback.value = "Player not available"
+                    return@launch
+                }
+
+                val context = transcriptViewModel?.getCurrentSegmentContext(currentPodcast.id, currentPosition)
+
+                if (context == null || context.parsedReferences.isEmpty()) {
+                    _voiceCommandFeedback.value = "No reference in this segment"
+                    return@launch
+                }
+
+                // Provide context-aware feedback for multiple references
+                val feedback = if (context.parsedReferences.size > 1) {
+                    "Playing first of ${context.parsedReferences.size} references"
+                } else {
+                    "Playing reference"
+                }
+
+                val firstReference = context.parsedReferences.first()
+                navigateToReferencedEpisode(firstReference.episodeId)
+                _voiceCommandFeedback.value = feedback
+
+            } catch (e: Exception) {
+                _voiceCommandFeedback.value = when {
+                    e.message?.contains("not found", ignoreCase = true) == true -> "Episode not found"
+                    e.message?.contains("network", ignoreCase = true) == true -> "Network error"
+                    else -> "Failed to load episode"
+                }
+            }
+        }
+    }
+
+    /**
+     * Navigate to previous episode in playback history
+     * Called by voice command "play previous"
+     *
+     * Note: This uses Media3's seekToPrevious() which manages the playback history.
+     * When navigateToReferencedEpisode() is called, savePosition() is called first,
+     * which allows Media3 to track the episode chain for previous navigation.
+     */
+    fun playPreviousEpisode() {
+        try {
+            player?.let {
+                if (it.hasPreviousMediaItem()) {
+                    it.seekToPrevious()
+                    _voiceCommandFeedback.value = "Going back"
+                } else {
+                    _voiceCommandFeedback.value = "Already at first episode"
+                }
+            } ?: run {
+                _voiceCommandFeedback.value = "Player not available"
+            }
+        } catch (e: Exception) {
+            _voiceCommandFeedback.value = "Playback error occurred"
         }
     }
 
