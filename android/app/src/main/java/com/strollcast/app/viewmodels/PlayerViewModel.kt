@@ -3,7 +3,9 @@ package com.strollcast.app.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.session.MediaController
 import com.strollcast.app.models.Podcast
 import com.strollcast.app.repository.HistoryRepository
 import com.strollcast.app.repository.PodcastRepository
@@ -38,24 +40,37 @@ class PlayerViewModel @Inject constructor(
     private val _voiceCommandFeedback = MutableStateFlow<String?>(null)
     val voiceCommandFeedback: StateFlow<String?> = _voiceCommandFeedback.asStateFlow()
 
-    private var player: Player? = null
+    private var controller: MediaController? = null
     private var transcriptViewModel: TranscriptViewModel? = null
+    private val playerListener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            _uiState.value = _uiState.value.copy(isPlaying = isPlaying)
+        }
 
-    fun setPlayer(player: Player) {
-        this.player = player
-        player.addListener(object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                _uiState.value = _uiState.value.copy(isPlaying = isPlaying)
-            }
-
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_READY) {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState == Player.STATE_READY) {
+                controller?.let { player ->
                     _uiState.value = _uiState.value.copy(
                         duration = player.duration
                     )
                 }
             }
-        })
+        }
+    }
+
+    fun setController(mediaController: MediaController) {
+        // Remove listener from old controller if exists
+        controller?.removeListener(playerListener)
+
+        this.controller = mediaController
+        mediaController.addListener(playerListener)
+
+        // Update UI state with current controller state
+        _uiState.value = _uiState.value.copy(
+            isPlaying = mediaController.isPlaying,
+            duration = if (mediaController.duration > 0) mediaController.duration else 0L,
+            currentPosition = mediaController.currentPosition
+        )
     }
 
     fun loadPodcastById(podcastId: String) {
@@ -76,12 +91,19 @@ class PlayerViewModel @Inject constructor(
                 return@launch
             }
 
+            // Build MediaItem with metadata for MediaSession
+            val metadata = MediaMetadata.Builder()
+                .setTitle(podcast.title)
+                .setArtist(podcast.authors)
+                .build()
+
             val mediaItem = MediaItem.Builder()
                 .setUri(mediaUri)
                 .setMediaId(podcast.id)
+                .setMediaMetadata(metadata)
                 .build()
 
-            player?.apply {
+            controller?.apply {
                 setMediaItem(mediaItem)
                 prepare()
 
@@ -97,34 +119,34 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun play() {
-        player?.play()
+        controller?.play()
     }
 
     fun pause() {
-        player?.pause()
+        controller?.pause()
         savePosition()
     }
 
     fun seekTo(position: Long) {
-        player?.seekTo(position)
+        controller?.seekTo(position)
     }
 
     fun skipForward(seconds: Long = 15) {
-        player?.let {
+        controller?.let {
             val newPosition = (it.currentPosition + seconds * 1000).coerceAtMost(it.duration)
             it.seekTo(newPosition)
         }
     }
 
     fun skipBackward(seconds: Long = 15) {
-        player?.let {
+        controller?.let {
             val newPosition = (it.currentPosition - seconds * 1000).coerceAtLeast(0)
             it.seekTo(newPosition)
         }
     }
 
     fun updatePosition() {
-        player?.let {
+        controller?.let {
             _uiState.value = _uiState.value.copy(currentPosition = it.currentPosition)
         }
     }
@@ -179,7 +201,7 @@ class PlayerViewModel @Inject constructor(
 
     private fun savePosition() {
         val podcast = _uiState.value.currentPodcast ?: return
-        val position = player?.currentPosition ?: return
+        val position = controller?.currentPosition ?: return
 
         viewModelScope.launch {
             repository.savePlaybackPosition(podcast.id, position)
@@ -223,7 +245,7 @@ class PlayerViewModel @Inject constructor(
                     return@launch
                 }
 
-                val currentPosition = player?.currentPosition ?: run {
+                val currentPosition = controller?.currentPosition ?: run {
                     _voiceCommandFeedback.value = "Player not available"
                     return@launch
                 }
@@ -266,7 +288,7 @@ class PlayerViewModel @Inject constructor(
      */
     fun playPreviousEpisode() {
         try {
-            player?.let {
+            controller?.let {
                 if (it.hasPreviousMediaItem()) {
                     it.seekToPrevious()
                     _voiceCommandFeedback.value = "Going back"
@@ -279,6 +301,12 @@ class PlayerViewModel @Inject constructor(
         } catch (e: Exception) {
             _voiceCommandFeedback.value = "Playback error occurred"
         }
+    }
+
+    fun releaseController() {
+        controller?.removeListener(playerListener)
+        controller?.release()
+        controller = null
     }
 
     override fun onCleared() {

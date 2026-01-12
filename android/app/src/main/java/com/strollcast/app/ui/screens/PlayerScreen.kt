@@ -1,5 +1,7 @@
 package com.strollcast.app.ui.screens
 
+import android.content.ComponentName
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,9 +13,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.C
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.MoreExecutors
+import com.strollcast.app.services.PlaybackService
 import com.strollcast.app.viewmodels.PlayerUiState
 import com.strollcast.app.viewmodels.PlayerViewModel
 import kotlin.math.roundToInt
@@ -32,23 +35,27 @@ fun PlayerScreen(
     val hasTranscript = uiState.currentPodcast?.transcriptUrl != null
     val tabs = if (hasTranscript) listOf("Player", "Transcript") else listOf("Player")
 
-    // Create and set up ExoPlayer
+    // Connect to PlaybackService via MediaController
     DisposableEffect(Unit) {
-        val player = ExoPlayer.Builder(context)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
-                    .setUsage(C.USAGE_MEDIA)
-                    .build(),
-                true
-            )
-            .setHandleAudioBecomingNoisy(true)
-            .build()
+        // Start the PlaybackService
+        val intent = Intent(context, PlaybackService::class.java)
+        context.startService(intent)
 
-        viewModel.setPlayer(player)
+        // Build MediaController to connect to the service
+        val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+        val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
+
+        controllerFuture.addListener(
+            {
+                val controller = controllerFuture.get()
+                viewModel.setController(controller)
+            },
+            MoreExecutors.directExecutor()
+        )
 
         onDispose {
-            player.release()
+            viewModel.releaseController()
+            MediaController.releaseFuture(controllerFuture)
         }
     }
 
