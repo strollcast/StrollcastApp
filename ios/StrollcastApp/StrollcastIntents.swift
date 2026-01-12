@@ -238,7 +238,9 @@ struct StrollcastShortcuts: AppShortcutsProvider {
                 "Play previous in \(.applicationName)",
                 "\(.applicationName) play previous",
                 "Previous podcast in \(.applicationName)",
-                "\(.applicationName) previous"
+                "\(.applicationName) previous",
+                "Jump to previous in \(.applicationName)",
+                "\(.applicationName) jump to previous"
             ],
             shortTitle: "Play Previous",
             systemImageName: "arrow.uturn.backward.circle"
@@ -276,7 +278,11 @@ struct StrollcastShortcuts: AppShortcutsProvider {
                 "Go to link in \(.applicationName)",
                 "\(.applicationName) go to link",
                 "Play link in \(.applicationName)",
-                "\(.applicationName) play link"
+                "\(.applicationName) play link",
+                "Jump to reference in \(.applicationName)",
+                "\(.applicationName) jump to reference",
+                "Jump to link in \(.applicationName)",
+                "\(.applicationName) jump to link"
             ],
             shortTitle: "Go to Reference",
             systemImageName: "link.circle"

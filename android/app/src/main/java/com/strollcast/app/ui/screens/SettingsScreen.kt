@@ -14,6 +14,22 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.strollcast.app.viewmodels.SettingsViewModel
 
+data class VoiceCommand(
+    val phrases: List<String>,
+    val description: String
+)
+
+private val voiceCommands = listOf(
+    VoiceCommand(
+        phrases = listOf("play reference", "jump to reference"),
+        description = "Navigate to the episode referenced in the current transcript segment"
+    ),
+    VoiceCommand(
+        phrases = listOf("play previous", "jump to previous"),
+        description = "Return to the previous episode in your listening history"
+    )
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -120,6 +136,53 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Delete All Downloads")
             }
+
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Voice Commands Section
+            Text(
+                text = "Voice Commands",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    voiceCommands.forEach { command ->
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = command.phrases.joinToString(" or "),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = command.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (command != voiceCommands.last()) {
+                            HorizontalDivider()
+                        }
+                    }
+                }
+            }
+
+            Text(
+                text = "Use these voice commands with Google Assistant for hands-free navigation.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
