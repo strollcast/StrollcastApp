@@ -39,10 +39,16 @@ All checklist items passed successfully.
 
 **Key Strengths**:
 - Clear, simple user stories with straightforward acceptance criteria
-- Well-defined functional requirements (FR-001 through FR-010)
+- Well-defined functional requirements (FR-001 through FR-011)
 - Technology-agnostic success criteria focused on visual verification and functionality
 - Appropriate edge cases identified (localization, accessibility, device sizes)
-- Clear scope boundaries in "Out of Scope" section
+- **Exceptionally clear scope boundaries**: Prominent scope note at top + detailed "Out of Scope" section with explicit examples
+- FR-011 explicitly requires internal code to remain unchanged
+
+**Scope Clarity**:
+- Visible UI labels only: "Podcasts" → "Strolls", "Settings" → icon-only
+- Internal code unchanged: PodcastViewModel, PodcastRepository, PodcastService, etc. stay as-is
+- Purely cosmetic change to address space constraints
 
 **No Issues Found**: All mandatory sections are complete, no [NEEDS CLARIFICATION] markers present, and all requirements are testable.
 
