@@ -148,7 +148,8 @@ class PlaybackService : MediaSessionService() {
                 try {
                     handleVoiceQuery(query)
                 } catch (e: Exception) {
-                    audioFeedback.speak(FeedbackMessages.COMMAND_NOT_RECOGNIZED)
+                    // On unexpected error, provide help message
+                    audioFeedback.speak(FeedbackMessages.HELP_MESSAGE, FeedbackPriority.HIGH)
                 }
             }
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
@@ -166,12 +167,19 @@ class PlaybackService : MediaSessionService() {
                 sendVoiceCommand(VoiceCommandType.PLAY_PREVIOUS)
             }
             CommandType.SEEK_TO_TIMESTAMP -> {
-                val timestampMs = command.parameters["timestamp_ms"]?.toLongOrNull() ?: 0L
-                player.seekTo(timestampMs)
-                audioFeedback.speak("Seeking to ${formatTimestamp(timestampMs)}")
+                val timestampMs = command.parameters["timestamp_ms"]?.toLongOrNull()
+                if (timestampMs != null && timestampMs >= 0) {
+                    player.seekTo(timestampMs)
+                    val minutes = timestampMs / 60000
+                    val seconds = (timestampMs % 60000) / 1000
+                    audioFeedback.speak(FeedbackMessages.seekingTo(minutes, seconds))
+                } else {
+                    audioFeedback.speak(FeedbackMessages.INVALID_TIMESTAMP)
+                }
             }
             CommandType.UNKNOWN -> {
-                audioFeedback.speak(FeedbackMessages.COMMAND_NOT_RECOGNIZED)
+                // Provide help message for unrecognized commands
+                audioFeedback.speak(FeedbackMessages.HELP_MESSAGE)
             }
         }
     }
@@ -181,12 +189,6 @@ class PlaybackService : MediaSessionService() {
             putExtra(EXTRA_COMMAND_TYPE, type.name)
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-    }
-
-    private fun formatTimestamp(ms: Long): String {
-        val minutes = ms / 60000
-        val seconds = (ms % 60000) / 1000
-        return "$minutes minutes $seconds seconds"
     }
 
     /**

@@ -87,7 +87,7 @@ This document breaks down the voice navigation feature into implementable tasks 
 
 **Tasks**:
 
-- [ ] T025 [US3] Enhance audio feedback messages for all edge cases in AudioFeedbackManager in android/app/src/main/java/com/strollcast/app/utils/AudioFeedbackManager.kt
+- [x] T025 [US3] Enhance audio feedback messages for all edge cases in AudioFeedbackManager in android/app/src/main/java/com/strollcast/app/utils/AudioFeedbackManager.kt
 
 ## Dependencies
 

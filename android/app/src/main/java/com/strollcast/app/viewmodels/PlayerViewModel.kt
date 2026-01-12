@@ -219,24 +219,39 @@ class PlayerViewModel @Inject constructor(
             try {
                 val currentPodcast = _uiState.value.currentPodcast
                 if (currentPodcast == null) {
-                    _voiceCommandFeedback.value = "No episode currently playing"
+                    _voiceCommandFeedback.value = "No episode playing"
                     return@launch
                 }
 
-                val currentPosition = player?.currentPosition ?: return@launch
+                val currentPosition = player?.currentPosition ?: run {
+                    _voiceCommandFeedback.value = "Player not available"
+                    return@launch
+                }
+
                 val context = transcriptViewModel?.getCurrentSegmentContext(currentPodcast.id, currentPosition)
 
                 if (context == null || context.parsedReferences.isEmpty()) {
-                    _voiceCommandFeedback.value = "No reference found in current segment"
+                    _voiceCommandFeedback.value = "No reference in this segment"
                     return@launch
+                }
+
+                // Provide context-aware feedback for multiple references
+                val feedback = if (context.parsedReferences.size > 1) {
+                    "Playing first of ${context.parsedReferences.size} references"
+                } else {
+                    "Playing reference"
                 }
 
                 val firstReference = context.parsedReferences.first()
                 navigateToReferencedEpisode(firstReference.episodeId)
-                _voiceCommandFeedback.value = "Playing reference episode"
+                _voiceCommandFeedback.value = feedback
 
             } catch (e: Exception) {
-                _voiceCommandFeedback.value = "Failed to play reference: ${e.message}"
+                _voiceCommandFeedback.value = when {
+                    e.message?.contains("not found", ignoreCase = true) == true -> "Episode not found"
+                    e.message?.contains("network", ignoreCase = true) == true -> "Network error"
+                    else -> "Failed to load episode"
+                }
             }
         }
     }
@@ -254,15 +269,15 @@ class PlayerViewModel @Inject constructor(
             player?.let {
                 if (it.hasPreviousMediaItem()) {
                     it.seekToPrevious()
-                    _voiceCommandFeedback.value = "Going back to previous episode"
+                    _voiceCommandFeedback.value = "Going back"
                 } else {
                     _voiceCommandFeedback.value = "Already at first episode"
                 }
             } ?: run {
-                _voiceCommandFeedback.value = "No player available"
+                _voiceCommandFeedback.value = "Player not available"
             }
         } catch (e: Exception) {
-            _voiceCommandFeedback.value = "Failed to go to previous episode: ${e.message}"
+            _voiceCommandFeedback.value = "Playback error occurred"
         }
     }
 

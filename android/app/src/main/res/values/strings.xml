@@ -41,11 +41,32 @@
     <string name="app_description">Strollcast transforms ML research papers into audio podcasts</string>
     <string name="app_version">Version 1.0.0</string>
 
-    <!-- Voice Command Feedback Messages -->
-    <string name="voice_no_reference">No reference found in current segment</string>
+    <!-- Voice Command Feedback Messages - Concise (<3 seconds) -->
+    <!-- Success messages -->
+    <string name="voice_playing_reference">Playing reference</string>
+    <string name="voice_playing_first_reference">Playing first reference</string>
+    <string name="voice_going_back">Going back</string>
+    <string name="voice_seeking">Seeking</string>
+
+    <!-- Error messages - No content -->
+    <string name="voice_no_reference">No reference in this segment</string>
     <string name="voice_no_previous">Already at first episode</string>
-    <string name="voice_playing_reference">Playing reference episode</string>
-    <string name="voice_going_back">Going back to previous episode</string>
-    <string name="voice_invalid_timestamp">Could not understand timestamp</string>
-    <string name="voice_command_not_recognized">Command not recognized. Try play reference or play previous</string>
+    <string name="voice_no_episode_playing">No episode playing</string>
+
+    <!-- Error messages - Network/Loading -->
+    <string name="voice_episode_not_found">Episode not found</string>
+    <string name="voice_loading_failed">Failed to load episode</string>
+    <string name="voice_network_error">Network error, check connection</string>
+
+    <!-- Error messages - Player state -->
+    <string name="voice_no_player">Player not available</string>
+    <string name="voice_player_error">Playback error occurred</string>
+
+    <!-- Error messages - Invalid input -->
+    <string name="voice_invalid_timestamp">Invalid timestamp</string>
+    <string name="voice_command_not_recognized">Command not recognized</string>
+
+    <!-- Help and discovery -->
+    <string name="voice_help_message">Try: play reference, or play previous</string>
+    <string name="voice_available_commands">Available commands: play reference, play previous</string>
 </resources>
