@@ -20,6 +20,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import androidx.media3.ui.PlayerNotificationManager
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.strollcast.app.MainActivity
@@ -98,6 +99,10 @@ class PlaybackService : MediaSessionService() {
             .setSessionActivity(sessionActivityPendingIntent)
             .setCallback(MediaSessionCallback())
             .build()
+
+        // Set the session as active so it's discoverable by Google Assistant
+        // Note: In Media3, sessions are active by default, but we log for verification
+        android.util.Log.d("PlaybackService", "MediaSession created and active")
 
         // Start as foreground service
         startForeground(NOTIFICATION_ID, createNotification())
@@ -190,11 +195,32 @@ class PlaybackService : MediaSessionService() {
     }
 
     /**
-     * Create foreground service notification
+     * Create foreground service notification with MediaStyle
+     * This makes the session discoverable by Google Assistant
      */
     private fun createNotification(): Notification {
+        val mediaSession = this.mediaSession ?: return createFallbackNotification()
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Strollcast")
+            .setContentTitle("Stroll Cast")
+            .setContentText("Ready for playback")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setMediaSession(mediaSession.sessionCompatToken)
+            )
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+    }
+
+    /**
+     * Fallback notification if MediaSession isn't ready yet
+     */
+    private fun createFallbackNotification(): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Stroll Cast")
             .setContentText("Ready for playback")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)

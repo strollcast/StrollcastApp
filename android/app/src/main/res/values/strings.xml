@@ -4,8 +4,10 @@
 
     <!-- Navigation -->
     <string name="nav_podcasts">Strolls</string>
+    <string name="nav_played">Played</string>
     <string name="nav_player">Player</string>
-    <string name="nav_settings"></string>
+    <string name="nav_notes">Notes</string>
+    <string name="nav_settings">Settings</string>
 
     <!-- Podcast List Screen -->
     <string name="refresh">Refresh</string>
@@ -67,6 +69,22 @@
     <string name="voice_command_not_recognized">Command not recognized</string>
 
     <!-- Help and discovery -->
-    <string name="voice_help_message">Try: play reference, or play previous</string>
-    <string name="voice_available_commands">Available commands: play reference, play previous</string>
+    <string name="voice_help_message">Try: jump to reference, or play previous</string>
+    <string name="voice_available_commands">Available commands: jump to reference, play previous</string>
+
+    <!-- Voice command synonyms for App Shortcuts -->
+    <string-array name="play_reference_synonyms">
+        <item>jump to reference</item>
+        <item>jump to the reference</item>
+        <item>jump to link</item>
+        <item>jump to the link</item>
+        <item>go to reference</item>
+        <item>go to the reference</item>
+    </string-array>
+
+    <string-array name="play_previous_synonyms">
+        <item>previous</item>
+        <item>previous episode</item>
+        <item>last episode</item>
+    </string-array>
 </resources>
