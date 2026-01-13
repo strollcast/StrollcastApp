@@ -288,6 +288,9 @@ struct DetailTranscriptNotesView: View {
     let onResumePlayback: () -> Void
     let onSeekTo: (TimeInterval) -> Void
 
+    @EnvironmentObject var audioPlayer: AudioPlayer
+    @EnvironmentObject var downloadManager: DownloadManager
+
     @State private var editingCueId: UUID? = nil
     @State private var newComment: String = ""
     @State private var wasPlayingBeforeEdit = false
@@ -363,7 +366,8 @@ struct DetailTranscriptNotesView: View {
                                 if wasPlayingBeforeEdit {
                                     onResumePlayback()
                                 }
-                            }
+                            },
+                            onLinkTap: handleLinkTap
                         )
                         .id(index)
                     }
@@ -399,6 +403,46 @@ struct DetailTranscriptNotesView: View {
         }
         return nil
     }
+
+    private func handleLinkTap(_ url: URL) {
+        Task { @MainActor in
+            // Extract episode ID from URL
+            guard let episodeId = MarkdownLinkParser.extractEpisodeId(from: url.absoluteString) else {
+                print("Could not extract episode ID from URL: \(url)")
+                return
+            }
+
+            // Fetch episode from API
+            guard let episode = await fetchEpisode(id: episodeId) else {
+                print("Could not fetch episode: \(episodeId)")
+                return
+            }
+
+            // Load and play the referenced episode
+            let state = downloadManager.downloadState(for: episode)
+            if case .downloaded(let localUrl) = state {
+                audioPlayer.load(podcast: episode, from: localUrl)
+            } else {
+                audioPlayer.load(podcast: episode, from: episode.audioURL)
+            }
+            audioPlayer.play()
+        }
+    }
+
+    private func fetchEpisode(id: String) async -> Podcast? {
+        guard let url = URL(string: "https://api.strollcast.com/episodes") else {
+            return nil
+        }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(EpisodesResponse.self, from: data)
+            return response.episodes.first(where: { $0.id == id })
+        } catch {
+            print("Error fetching episode \(id): \(error)")
+            return nil
+        }
+    }
 }
 
 struct DetailCueWithNotesView: View {
@@ -412,6 +456,16 @@ struct DetailCueWithNotesView: View {
     let onTapAdd: () -> Void
     let onSubmit: () -> Void
     let onCancel: () -> Void
+    let onLinkTap: ((URL) -> Void)?
+
+    @EnvironmentObject var audioPlayer: AudioPlayer
+    @EnvironmentObject var downloadManager: DownloadManager
+    @State private var isLoadingEpisode = false
+
+    private var attributedText: AttributedString {
+        let linkColor: Color = isActive ? .blue : .accentColor
+        return MarkdownLinkParser.buildAttributedString(from: cue.text, linkColor: linkColor)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -429,10 +483,17 @@ struct DetailCueWithNotesView: View {
                             .fontWeight(.semibold)
                             .foregroundColor(isActive ? .blue : .secondary)
                     }
-                    Text(cue.text)
+                    Text(attributedText)
                         .font(.body)
                         .foregroundColor(isActive ? .primary : .secondary)
                         .fontWeight(isActive ? .medium : .regular)
+                        .environment(\.openURL, OpenURLAction { url in
+                            if let onLinkTap = onLinkTap {
+                                onLinkTap(url)
+                                return .handled
+                            }
+                            return .systemAction
+                        })
                 }
             }
             .padding(.vertical, 6)
