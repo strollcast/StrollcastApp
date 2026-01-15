@@ -52,6 +52,11 @@ struct PlayedListView: View {
                 PodcastDetailView(podcast: podcast)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToEpisode)) { notification in
+            if let podcast = notification.object as? Podcast {
+                navigationPath.append(podcast)
+            }
+        }
     }
 }
 

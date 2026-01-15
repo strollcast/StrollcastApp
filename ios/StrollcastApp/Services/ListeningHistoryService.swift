@@ -2,6 +2,7 @@ import Foundation
 
 extension Notification.Name {
     static let listeningHistoryUpdated = Notification.Name("listeningHistoryUpdated")
+    static let navigateToEpisode = Notification.Name("navigateToEpisode")
 }
 
 class ListeningHistoryService {
