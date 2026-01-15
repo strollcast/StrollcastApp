@@ -314,6 +314,11 @@ class AudioPlayer: ObservableObject {
                 self?.player?.seek(to: .zero)
                 if let podcast = self?.currentPodcast {
                     ListeningHistoryService.shared.clearLastPosition(for: podcast)
+                    // Analytics: log podcast completion
+                    AnalyticsService.shared.logPodcastComplete(
+                        podcastId: podcast.id,
+                        title: podcast.title
+                    )
                 }
             }
         }
@@ -371,6 +376,15 @@ class AudioPlayer: ObservableObject {
         isPlaying = true
         updateNowPlayingInfo()
         logListeningHistory()
+
+        // Analytics
+        if let podcast = currentPodcast {
+            AnalyticsService.shared.logPodcastPlay(
+                podcastId: podcast.id,
+                title: podcast.title,
+                authors: podcast.authors
+            )
+        }
     }
 
     private func logListeningHistory() {
@@ -386,6 +400,15 @@ class AudioPlayer: ObservableObject {
         isPlaying = false
         updateNowPlayingInfo()
         logPauseHistory()
+
+        // Analytics
+        if let podcast = currentPodcast {
+            AnalyticsService.shared.logPodcastPause(
+                podcastId: podcast.id,
+                currentTime: currentTime,
+                duration: duration
+            )
+        }
     }
 
     private func logPauseHistory() {

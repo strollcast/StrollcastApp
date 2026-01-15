@@ -1,7 +1,10 @@
 import SwiftUI
+import FirebaseAnalytics
 
 @main
 struct StrollcastApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+
     @StateObject private var podcastService = PodcastService()
     @StateObject private var downloadManager = DownloadManager.shared
     @StateObject private var audioPlayer = AudioPlayer.shared
@@ -20,6 +23,8 @@ struct StrollcastApp: App {
                         Task {
                             await podcastService.fetchPodcasts()
                         }
+                        // Log app activation event
+                        Analytics.logEvent("app_opened", parameters: nil)
                     }
                 }
         }

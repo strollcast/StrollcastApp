@@ -62,6 +62,9 @@ class DownloadManager: NSObject, ObservableObject {
 
         downloadStates[podcast.id] = .downloading(progress: 0)
 
+        // Analytics: log download start
+        AnalyticsService.shared.logDownloadStart(podcastId: podcast.id)
+
         let task = session.downloadTask(with: podcast.audioURL)
         task.taskDescription = podcast.id
         downloadTasks[podcast.id] = task
@@ -172,14 +175,19 @@ extension DownloadManager: URLSessionDownloadDelegate {
 
         do {
             try fileManager.moveItem(at: tempURL, to: destinationURL)
+            let fileSize = (try? FileManager.default.attributesOfItem(atPath: destinationURL.path)[.size] as? Int64) ?? 0
             Task { @MainActor in
                 self.downloadStates[podcastId] = .downloaded(localURL: destinationURL)
                 self.downloadTasks.removeValue(forKey: podcastId)
                 self.progressObservers.removeValue(forKey: podcastId)
+                // Analytics: log download complete
+                AnalyticsService.shared.logDownloadComplete(podcastId: podcastId, fileSize: fileSize)
             }
         } catch {
             Task { @MainActor in
                 self.downloadStates[podcastId] = .failed(error: error.localizedDescription)
+                // Analytics: log download error
+                AnalyticsService.shared.logDownloadError(podcastId: podcastId, error: error.localizedDescription)
             }
         }
     }
@@ -190,6 +198,8 @@ extension DownloadManager: URLSessionDownloadDelegate {
         Task { @MainActor in
             if (error as NSError).code != NSURLErrorCancelled {
                 self.downloadStates[podcastId] = .failed(error: error.localizedDescription)
+                // Analytics: log download error
+                AnalyticsService.shared.logDownloadError(podcastId: podcastId, error: error.localizedDescription)
             }
             self.downloadTasks.removeValue(forKey: podcastId)
             self.progressObservers.removeValue(forKey: podcastId)

@@ -146,6 +146,7 @@ struct PodcastRowView: View {
 
 }
 
+#if DEBUG
 #Preview {
     List {
         PodcastRowView(podcast: Podcast.samples[0])
@@ -153,3 +154,4 @@ struct PodcastRowView: View {
     .environmentObject(DownloadManager.shared)
     .environmentObject(AudioPlayer.shared)
 }
+#endif

@@ -418,14 +418,8 @@ struct DetailTranscriptNotesView: View {
                 return
             }
 
-            // Load and play the referenced episode
-            let state = downloadManager.downloadState(for: episode)
-            if case .downloaded(let localUrl) = state {
-                audioPlayer.load(podcast: episode, from: localUrl)
-            } else {
-                audioPlayer.load(podcast: episode, from: episode.audioURL)
-            }
-            audioPlayer.play()
+            // Navigate to the episode's detail view
+            NotificationCenter.default.post(name: .navigateToEpisode, object: episode)
         }
     }
 
@@ -567,6 +561,7 @@ struct DetailCueWithNotesView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         PodcastDetailView(podcast: Podcast.samples[0])
@@ -574,3 +569,4 @@ struct DetailCueWithNotesView: View {
     .environmentObject(DownloadManager.shared)
     .environmentObject(AudioPlayer.shared)
 }
+#endif
