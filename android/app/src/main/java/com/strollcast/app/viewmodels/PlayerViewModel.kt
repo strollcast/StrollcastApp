@@ -193,6 +193,37 @@ class PlayerViewModel @Inject constructor(
     }
 
     /**
+     * Navigate to an episode referenced by arXiv ID from a paper reference URL
+     * @param arxivId The arXiv ID of the referenced paper
+     * @return true if navigation succeeded, false if no matching episode found
+     */
+    suspend fun navigateToArxivReference(arxivId: String): Boolean {
+        return try {
+            // Search for episode where paperUrl contains the arXiv ID
+            val episode = repository.getPodcastByArxivId(arxivId)
+            if (episode == null) {
+                return false
+            }
+
+            // Save current position before navigating
+            savePosition()
+
+            // Load the referenced episode
+            loadPodcast(episode)
+
+            // Auto-play the referenced episode
+            play()
+
+            // Clear any previous errors
+            _navigationError.value = null
+            true
+        } catch (e: Exception) {
+            _navigationError.value = "Failed to load episode: ${e.message}"
+            false
+        }
+    }
+
+    /**
      * Clear navigation error state
      */
     fun clearNavigationError() {

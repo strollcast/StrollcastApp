@@ -90,4 +90,36 @@ struct MarkdownLinkParser {
 
         return pathComponents[pathComponents.count - 2]
     }
+
+    /// Represents a paper reference extracted from a URL
+    struct PaperReference {
+        let type: String      // e.g., "arxiv"
+        let id: String        // e.g., "1706.03762"
+    }
+
+    /// Extract paper reference from a Strollcast paper URL
+    /// Expected format: https://strollcast.com/paper/arxiv/{arxiv_id}
+    static func extractPaperReference(from urlString: String) -> PaperReference? {
+        guard let url = URL(string: urlString) else { return nil }
+
+        // Check host is strollcast.com
+        guard url.host == "strollcast.com" else { return nil }
+
+        let pathComponents = url.pathComponents
+        // Expected: ["", "paper", "arxiv", "1706.03762"]
+        guard pathComponents.count >= 4,
+              pathComponents[1] == "paper" else {
+            return nil
+        }
+
+        let type = pathComponents[2]  // "arxiv"
+        let id = pathComponents[3...].joined(separator: "/")  // Handle IDs with slashes
+
+        return PaperReference(type: type, id: id)
+    }
+
+    /// Check if a URL is a Strollcast paper reference URL
+    static func isPaperReferenceUrl(_ urlString: String) -> Bool {
+        return extractPaperReference(from: urlString) != nil
+    }
 }

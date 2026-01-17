@@ -43,6 +43,12 @@ class PodcastRepository @Inject constructor(
         return podcastDao.getPodcastById(id)
     }
 
+    suspend fun getPodcastByArxivId(arxivId: String): Podcast? {
+        return podcastDao.getAllPodcastsOnce().find { podcast ->
+            podcast.paperUrl?.contains(arxivId) == true
+        }
+    }
+
     // Playback History
     val playbackHistory: Flow<List<PlaybackHistoryEntry>> = historyDao.getHistory()
 

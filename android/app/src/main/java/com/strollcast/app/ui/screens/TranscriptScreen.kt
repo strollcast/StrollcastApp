@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.strollcast.app.ui.components.NoteDialog
 import com.strollcast.app.ui.components.TranscriptLineItem
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import com.strollcast.app.utils.EpisodeUrlParser
 import com.strollcast.app.viewmodels.NoteViewModel
 import com.strollcast.app.viewmodels.PlayerViewModel
@@ -52,6 +55,7 @@ fun TranscriptScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     // Note dialog state
     var showNoteDialog by remember { mutableStateOf(false) }
@@ -183,9 +187,22 @@ fun TranscriptScreen(
                                 showNoteDialog = true
                             },
                             onLinkClick = { url ->
-                                // Extract episode ID from reference URL and navigate
-                                EpisodeUrlParser.extractEpisodeId(url)?.let { episodeId ->
-                                    playerViewModel.navigateToReferencedEpisode(episodeId)
+                                // Check for paper reference URL first
+                                val arxivId = EpisodeUrlParser.extractArxivId(url)
+                                if (arxivId != null) {
+                                    coroutineScope.launch {
+                                        val found = playerViewModel.navigateToArxivReference(arxivId)
+                                        if (!found) {
+                                            // No episode found - open arXiv page in browser
+                                            val arxivUrl = "https://arxiv.org/abs/$arxivId"
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(arxivUrl)))
+                                        }
+                                    }
+                                } else {
+                                    // Fall back to episode URL handling
+                                    EpisodeUrlParser.extractEpisodeId(url)?.let { episodeId ->
+                                        playerViewModel.navigateToReferencedEpisode(episodeId)
+                                    }
                                 }
                             }
                         )

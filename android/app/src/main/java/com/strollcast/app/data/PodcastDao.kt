@@ -11,6 +11,9 @@ interface PodcastDao {
     @Query("SELECT * FROM podcasts WHERE published IS NULL OR published = 1 ORDER BY createdAt DESC")
     fun getAllPodcasts(): Flow<List<Podcast>>
 
+    @Query("SELECT * FROM podcasts WHERE published IS NULL OR published = 1")
+    suspend fun getAllPodcastsOnce(): List<Podcast>
+
     @Query("SELECT * FROM podcasts WHERE id = :id")
     suspend fun getPodcastById(id: String): Podcast?
 

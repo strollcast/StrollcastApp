@@ -406,20 +406,36 @@ struct DetailTranscriptNotesView: View {
 
     private func handleLinkTap(_ url: URL) {
         Task { @MainActor in
-            // Extract episode ID from URL
-            guard let episodeId = MarkdownLinkParser.extractEpisodeId(from: url.absoluteString) else {
-                print("Could not extract episode ID from URL: \(url)")
+            let urlString = url.absoluteString
+
+            // Check if it's a paper reference URL (https://strollcast.com/paper/arxiv/XXXX)
+            if let paperRef = MarkdownLinkParser.extractPaperReference(from: urlString) {
+                if paperRef.type == "arxiv" {
+                    // Try to find episode by arXiv ID
+                    if let episode = await fetchEpisodeByArxivId(paperRef.id) {
+                        NotificationCenter.default.post(name: .navigateToEpisode, object: episode)
+                    } else {
+                        // No episode found - open arXiv page
+                        if let arxivUrl = URL(string: "https://arxiv.org/abs/\(paperRef.id)") {
+                            await UIApplication.shared.open(arxivUrl)
+                        }
+                    }
+                }
                 return
             }
 
-            // Fetch episode from API
-            guard let episode = await fetchEpisode(id: episodeId) else {
-                print("Could not fetch episode: \(episodeId)")
+            // Check if it's an episode URL (https://released.strollcast.com/episodes/...)
+            if let episodeId = MarkdownLinkParser.extractEpisodeId(from: urlString) {
+                if let episode = await fetchEpisode(id: episodeId) {
+                    NotificationCenter.default.post(name: .navigateToEpisode, object: episode)
+                } else {
+                    print("Could not fetch episode: \(episodeId)")
+                }
                 return
             }
 
-            // Navigate to the episode's detail view
-            NotificationCenter.default.post(name: .navigateToEpisode, object: episode)
+            // Unknown URL type - open externally
+            await UIApplication.shared.open(url)
         }
     }
 
@@ -434,6 +450,22 @@ struct DetailTranscriptNotesView: View {
             return response.episodes.first(where: { $0.id == id })
         } catch {
             print("Error fetching episode \(id): \(error)")
+            return nil
+        }
+    }
+
+    private func fetchEpisodeByArxivId(_ arxivId: String) async -> Podcast? {
+        guard let url = URL(string: "https://api.strollcast.com/episodes") else {
+            return nil
+        }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(EpisodesResponse.self, from: data)
+            // Search for episode where paperUrl contains the arXiv ID
+            return response.episodes.first(where: { $0.paperUrl?.contains(arxivId) == true })
+        } catch {
+            print("Error fetching episode by arXiv ID \(arxivId): \(error)")
             return nil
         }
     }

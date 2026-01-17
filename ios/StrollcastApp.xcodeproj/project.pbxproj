@@ -83,7 +83,6 @@
 			isa = PBXGroup;
 			children = (
 				187E2CF32F17E1A400031EB1 /* AnalyticsService.swift */,
-				187E2CF42F17E1A400031EB1 /* AppDelegate.swift */,
 				187E2CEC2F17DF9400031EB1 /* GoogleService-Info.plist */,
 				A4000001 /* StrollcastApp */,
 				A4000005 /* Products */,
@@ -93,6 +92,7 @@
 		A4000001 /* StrollcastApp */ = {
 			isa = PBXGroup;
 			children = (
+				187E2CF42F17E1A400031EB1 /* AppDelegate.swift */,
 				A2000001 /* StrollcastApp.swift */,
 				A2000002 /* ContentView.swift */,
 				A2000019 /* StrollcastIntents.swift */,
