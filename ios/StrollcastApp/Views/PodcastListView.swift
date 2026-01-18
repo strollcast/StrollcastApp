@@ -52,7 +52,7 @@ struct PodcastListView: View {
                     }
                 }
             }
-            .navigationTitle("Strollcast")
+            .navigationTitle("")
             .navigationDestination(for: Podcast.self) { podcast in
                 PodcastDetailView(podcast: podcast)
             }

@@ -27,7 +27,7 @@ fun PodcastListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Strollcast") },
+                title = { },
                 actions = {
                     IconButton(onClick = { viewModel.refreshPodcasts() }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
