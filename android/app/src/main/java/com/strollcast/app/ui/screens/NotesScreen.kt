@@ -37,7 +37,11 @@ fun NotesScreen(
 
     // Load notes when screen opens
     LaunchedEffect(episodeId) {
-        episodeId?.let { viewModel.loadNotesForEpisode(it) }
+        if (episodeId != null) {
+            viewModel.loadNotesForEpisode(episodeId)
+        } else {
+            viewModel.loadAllNotes()
+        }
     }
 
     Scaffold(

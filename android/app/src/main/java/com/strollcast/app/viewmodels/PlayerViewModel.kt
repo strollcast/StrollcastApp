@@ -127,6 +127,14 @@ class PlayerViewModel @Inject constructor(
         savePosition()
     }
 
+    fun togglePlayPause() {
+        if (_uiState.value.isPlaying) {
+            pause()
+        } else {
+            play()
+        }
+    }
+
     fun seekTo(position: Long) {
         controller?.seekTo(position)
     }

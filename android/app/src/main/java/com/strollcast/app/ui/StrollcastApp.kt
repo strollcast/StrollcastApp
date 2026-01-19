@@ -1,6 +1,7 @@
 package com.strollcast.app.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -12,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -19,11 +21,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.strollcast.app.R
+import com.strollcast.app.ui.components.MiniPlayerBar
 import com.strollcast.app.ui.screens.NotesScreen
 import com.strollcast.app.ui.screens.PlayedListScreen
 import com.strollcast.app.ui.screens.PodcastListScreen
 import com.strollcast.app.ui.screens.PlayerScreen
 import com.strollcast.app.ui.screens.SettingsScreen
+import com.strollcast.app.viewmodels.PlayerViewModel
 
 sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Podcasts : Screen("podcasts", R.string.nav_podcasts, Icons.Filled.Home)
@@ -39,36 +43,59 @@ sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: a
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StrollcastApp() {
+fun StrollcastApp(
+    playerViewModel: PlayerViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
     val items = listOf(Screen.Podcasts, Screen.Played, Screen.Notes, Screen.Settings)
+    val playerUiState by playerViewModel.uiState.collectAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    // Check if we're on the player screen
+    val isOnPlayerScreen = currentDestination?.route?.startsWith("player/") == true
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-
-                items.forEach { screen ->
-                    val title = stringResource(screen.titleRes)
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = title) },
-                        label = { Text(title) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            // Check if already on this screen
-                            if (currentDestination?.hierarchy?.any { it.route == screen.route } != true) {
-                                navController.navigate(screen.route) {
-                                    // Pop everything up to the start destination
-                                    popUpTo(Screen.Podcasts.route) {
-                                        inclusive = false
-                                    }
-                                    // Avoid multiple copies of the same destination
-                                    launchSingleTop = true
-                                }
+            Column {
+                // Show mini player when there's a podcast and we're not on the player screen
+                if (playerUiState.currentPodcast != null && !isOnPlayerScreen) {
+                    MiniPlayerBar(
+                        podcast = playerUiState.currentPodcast!!,
+                        isPlaying = playerUiState.isPlaying,
+                        onTap = {
+                            playerUiState.currentPodcast?.let { podcast ->
+                                navController.navigate(Screen.Player.createRoute(podcast.id))
                             }
+                        },
+                        onPlayPause = {
+                            playerViewModel.togglePlayPause()
                         }
                     )
+                }
+
+                NavigationBar {
+                    items.forEach { screen ->
+                        val title = stringResource(screen.titleRes)
+                        NavigationBarItem(
+                            icon = { Icon(screen.icon, contentDescription = title) },
+                            label = { Text(title) },
+                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            onClick = {
+                                // Check if already on this screen
+                                if (currentDestination?.hierarchy?.any { it.route == screen.route } != true) {
+                                    navController.navigate(screen.route) {
+                                        // Pop everything up to the start destination
+                                        popUpTo(Screen.Podcasts.route) {
+                                            inclusive = false
+                                        }
+                                        // Avoid multiple copies of the same destination
+                                        launchSingleTop = true
+                                    }
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }

@@ -36,6 +36,34 @@ class NoteViewModel @Inject constructor(
     val uiState: StateFlow<NoteUiState> = _uiState.asStateFlow()
 
     /**
+     * Load all notes across all episodes
+     */
+    fun loadAllNotes() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            try {
+                noteRepository.getAllNotes().collect { notes ->
+                    _uiState.update {
+                        it.copy(
+                            notes = notes,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load notes"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
      * Load all notes for an episode
      *
      * @param episodeId Episode ID to load notes for

@@ -19,6 +19,15 @@ class NoteRepository @Inject constructor(
     }
 
     /**
+     * Get all notes as Flow
+     *
+     * @return Flow of all notes sorted by creation date (newest first)
+     */
+    fun getAllNotes(): Flow<List<NoteEntity>> {
+        return noteDao.getAllNotes()
+    }
+
+    /**
      * Get all notes for an episode as Flow
      *
      * @param episodeId Episode ID
