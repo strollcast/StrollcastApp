@@ -14,6 +14,8 @@ import javax.inject.Inject
 
 data class PodcastUiState(
     val podcasts: List<Podcast> = emptyList(),
+    val filteredPodcasts: List<Podcast> = emptyList(),
+    val searchQuery: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -43,6 +45,7 @@ class PodcastViewModel @Inject constructor(
                 .collect { podcasts ->
                     _uiState.value = _uiState.value.copy(
                         podcasts = podcasts,
+                        filteredPodcasts = filterPodcasts(podcasts, _uiState.value.searchQuery),
                         isLoading = false
                     )
                 }
@@ -64,5 +67,22 @@ class PodcastViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    fun updateSearchQuery(query: String) {
+        _uiState.value = _uiState.value.copy(
+            searchQuery = query,
+            filteredPodcasts = filterPodcasts(_uiState.value.podcasts, query)
+        )
+    }
+
+    private fun filterPodcasts(podcasts: List<Podcast>, query: String): List<Podcast> {
+        if (query.isBlank()) return podcasts
+        val lowercaseQuery = query.lowercase()
+        return podcasts.filter { podcast ->
+            podcast.title?.lowercase()?.contains(lowercaseQuery) == true ||
+            podcast.authors?.lowercase()?.contains(lowercaseQuery) == true ||
+            podcast.description?.lowercase()?.contains(lowercaseQuery) == true
+        }
     }
 }

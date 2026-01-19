@@ -6,6 +6,7 @@ object VttParser {
     private const val WEBVTT_HEADER = "WEBVTT"
     private val TIMESTAMP_PATTERN = Regex("""([\d:\.]+)\s*-->\s*([\d:\.]+)""")
     private val VOICE_TAG_PATTERN = Regex("""<v\s+([^>]+)>""")
+    private val HTML_LINK_PATTERN = Regex("""<a\s+href=["']([^"']+)["'][^>]*>([^<]+)</a>""", RegexOption.IGNORE_CASE)
 
     /**
      * Parse WebVTT content into a list of TranscriptCue objects
@@ -55,7 +56,14 @@ object VttParser {
                         cueLine = cueLine.replace(VOICE_TAG_PATTERN, "").trim()
                     }
 
-                    // Remove all HTML tags
+                    // Convert HTML links to markdown format before stripping other tags
+                    cueLine = HTML_LINK_PATTERN.replace(cueLine) { match ->
+                        val url = match.groupValues[1]
+                        val text = match.groupValues[2]
+                        "[$text]($url)"
+                    }
+
+                    // Remove remaining HTML tags (but not our markdown links)
                     cueLine = cueLine.replace(Regex("<[^>]+>"), "")
 
                     if (cueLine.isNotEmpty()) {

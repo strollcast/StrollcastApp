@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,42 +38,72 @@ fun PodcastListScreen(
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when {
-                uiState.isLoading && uiState.podcasts.isEmpty() -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                uiState.errorMessage != null && uiState.podcasts.isEmpty() -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Error: ${uiState.errorMessage}",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.refreshPodcasts() }) {
-                            Text("Retry")
+            // Search bar
+            OutlinedTextField(
+                value = uiState.searchQuery,
+                onValueChange = { viewModel.updateSearchQuery(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = { Text("Search episodes") },
+                leadingIcon = {
+                    Icon(Icons.Filled.Search, contentDescription = "Search")
+                },
+                trailingIcon = {
+                    if (uiState.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.updateSearchQuery("") }) {
+                            Icon(Icons.Filled.Clear, contentDescription = "Clear search")
                         }
                     }
-                }
-                else -> {
-                    LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.podcasts) { podcast ->
-                            PodcastListItem(
-                                podcast = podcast,
-                                onClick = { onPodcastClick(podcast) }
+                },
+                singleLine = true
+            )
+
+            Box(modifier = Modifier.weight(1f)) {
+                when {
+                    uiState.isLoading && uiState.podcasts.isEmpty() -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                    uiState.errorMessage != null && uiState.podcasts.isEmpty() -> {
+                        Column(
+                            modifier = Modifier.align(Alignment.Center),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Error: ${uiState.errorMessage}",
+                                color = MaterialTheme.colorScheme.error
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = { viewModel.refreshPodcasts() }) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                    uiState.filteredPodcasts.isEmpty() && uiState.searchQuery.isNotEmpty() -> {
+                        Text(
+                            text = "No episodes match \"${uiState.searchQuery}\"",
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    else -> {
+                        LazyColumn(
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(uiState.filteredPodcasts) { podcast ->
+                                PodcastListItem(
+                                    podcast = podcast,
+                                    onClick = { onPodcastClick(podcast) }
+                                )
+                            }
                         }
                     }
                 }
