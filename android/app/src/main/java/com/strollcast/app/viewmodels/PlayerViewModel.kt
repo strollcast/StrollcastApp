@@ -54,6 +54,20 @@ class PlayerViewModel @Inject constructor(
                         duration = player.duration
                     )
                 }
+            } else if (playbackState == Player.STATE_ENDED) {
+                // Episode finished naturally - mark as complete
+                val podcast = _uiState.value.currentPodcast ?: return
+                val duration = _uiState.value.duration
+                if (duration > 0) {
+                    viewModelScope.launch {
+                        repository.savePlaybackPosition(podcast.id, duration)
+                        historyRepository.markEpisodeComplete(
+                            episodeId = podcast.id,
+                            playbackPosition = duration,
+                            episodeDuration = duration
+                        )
+                    }
+                }
             }
         }
     }
