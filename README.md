@@ -2,6 +2,8 @@
 
 Native mobile apps for browsing and playing episodes from [strollcast.com](https://strollcast.com) - AI-generated audio summaries of machine learning research papers.
 
+[![Download on the App Store](https://img.shields.io/badge/App_Store-0D96F6?style=for-the-badge&logo=app-store&logoColor=white)](https://apps.apple.com/us/app/strollcast/id6758072315)
+
 ![App Icon](ios/StrollcastApp/Assets.xcassets/AppIcon.appiconset/AppIcon.png)
 
 ## Features
@@ -18,11 +20,9 @@ Native mobile apps for browsing and playing episodes from [strollcast.com](https
 
 ### iOS
 
-See the [iOS README](ios/README.md) for installation instructions including:
-- Building from source with Xcode
-- Sideloading IPA files
-- iOS-specific project structure
-- IPA distribution builds
+**[Download from the App Store](https://apps.apple.com/us/app/strollcast/id6758072315)**
+
+Or build from source - see the [iOS README](ios/README.md) for instructions.
 
 ### Android
 
