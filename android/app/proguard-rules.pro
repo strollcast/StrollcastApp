@@ -23,6 +23,8 @@
 # Gson
 -keepattributes Signature
 -keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keepattributes InnerClasses
 -dontwarn sun.misc.**
 -keep class com.google.gson.** { *; }
 -keep class * implements com.google.gson.TypeAdapter
@@ -30,8 +32,23 @@
 -keep class * implements com.google.gson.JsonSerializer
 -keep class * implements com.google.gson.JsonDeserializer
 
-# Keep data models
+# Gson: Preserve generic type information for TypeToken (required for R8 full mode)
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
+
+# Keep data models with generic type signatures preserved
 -keep class com.strollcast.app.models.** { *; }
+-keepclassmembers class com.strollcast.app.models.** {
+    <fields>;
+    <init>(...);
+}
+
+# R8 full mode: keep generic signatures for classes with generic fields
+-keepclassmembers,allowobfuscation class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
 -keep class com.strollcast.app.network.** { *; }
 
 # Room
