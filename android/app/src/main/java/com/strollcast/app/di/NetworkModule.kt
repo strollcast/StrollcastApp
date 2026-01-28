@@ -2,6 +2,8 @@ package com.strollcast.app.di
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.strollcast.app.models.EpisodesResponse
+import com.strollcast.app.models.EpisodesResponseDeserializer
 import com.strollcast.app.network.StrollcastApi
 import dagger.Module
 import dagger.Provides
@@ -24,6 +26,7 @@ object NetworkModule {
         return GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             .serializeNulls()
+            .registerTypeAdapter(EpisodesResponse::class.java, EpisodesResponseDeserializer())
             .create()
     }
 
